@@ -15,6 +15,14 @@ export const officialPlugins = [
 
   },
   {
+    name: 'IED',
+    src: '/src/editors/IED.js',
+    icon: '',
+    default: true,
+    kind: 'editor',
+
+  },
+  {
     name: 'Templates',
     src: '/src/editors/Templates.js',
     icon: 'copy_all',
