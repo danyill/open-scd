@@ -14,12 +14,19 @@ import { startMove, styles, cloneElement } from './foundation.js';
 import './conducting-equipment-editor.js';
 import { VoltageLevelEditor } from './voltage-level-editor.js';
 import { wizards } from '../../wizards/wizard-library.js';
+import { renderIedContainer } from '../ied/foundation.js';
 
 /** [[`SubstationEditor`]] subeditor for a `Bay` element. */
 @customElement('bay-editor')
 export class BayEditor extends LitElement {
   @property({ attribute: false })
   element!: Element;
+
+  @property({ type: Boolean })
+  readonly = false;
+
+  @property({ type: Boolean })
+  showieds = false;
 
   @property({ type: String })
   get name(): string {
@@ -62,50 +69,53 @@ export class BayEditor extends LitElement {
   renderHeader(): TemplateResult {
     return html`<h3>
       ${this.name} ${this.desc === null ? '' : html`&mdash;`} ${this.desc}
-      <abbr title="${translate('add')}">
-        <mwc-icon-button
-          icon="playlist_add"
-          @click=${() => this.openConductingEquipmentWizard()}
-        ></mwc-icon-button>
-      </abbr>
-      <nav>
-        <abbr title="${translate('lnode.tooltip')}">
-          <mwc-icon-button
-            icon="account_tree"
-            @click="${() => this.openLNodeWizard()}"
-          ></mwc-icon-button>
-        </abbr>
-        <abbr title="${translate('duplicate')}">
-          <mwc-icon-button
-            icon="content_copy"
-            @click=${() => cloneElement(this)}
-          ></mwc-icon-button>
-        </abbr>
-        <abbr title="${translate('edit')}">
-          <mwc-icon-button
-            icon="edit"
-            @click=${() => this.openEditWizard()}
-          ></mwc-icon-button>
-        </abbr>
-        <abbr title="${translate('move')}">
-          <mwc-icon-button
-            icon="forward"
-            @click=${() => startMove(this, BayEditor, VoltageLevelEditor)}
-          ></mwc-icon-button>
-        </abbr>
-        <abbr title="${translate('remove')}">
-          <mwc-icon-button
-            icon="delete"
-            @click=${() => this.remove()}
-          ></mwc-icon-button>
-        </abbr>
-      </nav>
+      ${this.readonly
+        ? html``
+        : html`<abbr title="${translate('add')}">
+              <mwc-icon-button
+                icon="playlist_add"
+                @click=${() => this.openConductingEquipmentWizard()}
+              ></mwc-icon-button>
+            </abbr>
+            <nav>
+              <abbr title="${translate('lnode.tooltip')}">
+                <mwc-icon-button
+                  icon="account_tree"
+                  @click="${() => this.openLNodeWizard()}"
+                ></mwc-icon-button>
+              </abbr>
+              <abbr title="${translate('duplicate')}">
+                <mwc-icon-button
+                  icon="content_copy"
+                  @click=${() => cloneElement(this)}
+                ></mwc-icon-button>
+              </abbr>
+              <abbr title="${translate('edit')}">
+                <mwc-icon-button
+                  icon="edit"
+                  @click=${() => this.openEditWizard()}
+                ></mwc-icon-button>
+              </abbr>
+              <abbr title="${translate('move')}">
+                <mwc-icon-button
+                  icon="forward"
+                  @click=${() => startMove(this, BayEditor, VoltageLevelEditor)}
+                ></mwc-icon-button>
+              </abbr>
+              <abbr title="${translate('remove')}">
+                <mwc-icon-button
+                  icon="delete"
+                  @click=${() => this.remove()}
+                ></mwc-icon-button>
+              </abbr>
+            </nav>`}
     </h3>`;
   }
 
   render(): TemplateResult {
     return html`<section tabindex="0">
       ${this.renderHeader()}
+      ${this.showieds ? renderIedContainer(this.element) : html``}
       <div id="ceContainer">
         ${Array.from(
           this.element?.querySelectorAll(
