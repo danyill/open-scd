@@ -9,57 +9,6 @@ import {
 
 import { newActionEvent, newWizardEvent } from '../../foundation.js';
 
-const circuitBreakerIcon = html`<svg
-  xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 25 25"
->
-  <line
-    x1="12.5"
-    y1="2"
-    x2="12.5"
-    y2="8"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="12.5"
-    y1="23"
-    x2="12.5"
-    y2="18"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="12.5"
-    y1="18"
-    x2="8"
-    y2="9"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="11.5"
-    y1="7"
-    x2="13.5"
-    y2="9"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-  <line
-    x1="11.5"
-    y1="9"
-    x2="13.5"
-    y2="7"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linecap="round"
-  />
-</svg>`;
-
 /** [[`SubstationEditor`]] subeditor for a `ConductingEquipment` element. */
 @customElement('ied-editor')
 export class IedEditor extends LitElement {
@@ -96,7 +45,7 @@ export class IedEditor extends LitElement {
   render(): TemplateResult {
     return html`
       <div id="container" tabindex="0">
-        <mwc-icon class="icon">tablet</mwc-icon>
+        <mwc-icon class="icon">developer_board</mwc-icon>
         <mwc-fab mini class="menu-item left" icon="account_tree"></mwc-fab>
         <mwc-fab mini class="menu-item up" icon="edit"></mwc-fab>
         <mwc-fab mini class="menu-item right" icon="forward"></mwc-fab>

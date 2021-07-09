@@ -17,7 +17,7 @@ export const officialPlugins = [
   {
     name: 'IED',
     src: '/src/editors/IED.js',
-    icon: 'tablet',
+    icon: 'developer_board',
     default: true,
     kind: 'editor',
 
