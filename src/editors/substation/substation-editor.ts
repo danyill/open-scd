@@ -14,12 +14,19 @@ import { selectors, styles } from './foundation.js';
 
 import './voltage-level-editor.js';
 import { wizards } from '../../wizards/wizard-library.js';
+import { renderIedContainer } from '../ied/foundation.js';
 /** [[`Substation`]] plugin subeditor for editing `Substation` sections. */
 @customElement('substation-editor')
 export class SubstationEditor extends LitElement {
   /** The edited `Element`, a common property of all Substation subeditors. */
   @property({ attribute: false })
   element!: Element;
+
+  @property({ type: Boolean })
+  readonly = false;
+
+  @property({ type: Boolean })
+  showieds = false;
 
   /** [[element | `element.name`]] */
   @property({ type: String })
@@ -67,31 +74,36 @@ export class SubstationEditor extends LitElement {
     return html`
       <h1>
         ${this.name} ${this.desc === null ? '' : html`&mdash;`} ${this.desc}
-        <abbr title="${translate('add')}">
-          <mwc-icon-button
-            icon="playlist_add"
-            @click=${() => this.openVoltageLevelWizard()}
-          ></mwc-icon-button>
-        </abbr>
-        <nav>
-          <abbr title="${translate('lnode.tooltip')}">
-            <mwc-icon-button
-              icon="account_tree"
-              @click=${() => this.openLNodeWizard()}
-            ></mwc-icon-button>
-          </abbr>
-          <abbr title="${translate('edit')}">
-            <mwc-icon-button
-              icon="edit"
-              @click=${() => this.openEditWizard()}
-            ></mwc-icon-button>
-          </abbr>
-          <abbr title="${translate('remove')}">
-            <mwc-icon-button
-              icon="delete"
-              @click=${() => this.remove()}
-            ></mwc-icon-button>
-          </abbr>
+        ${
+          this.readonly
+            ? html``
+            : html`<abbr title="${translate('add')}">
+                  <mwc-icon-button
+                    icon="playlist_add"
+                    @click=${() => this.openVoltageLevelWizard()}
+                  ></mwc-icon-button>
+                </abbr>
+                <nav>
+                  <abbr title="${translate('lnode.tooltip')}">
+                    <mwc-icon-button
+                      icon="account_tree"
+                      @click=${() => this.openLNodeWizard()}
+                    ></mwc-icon-button>
+                  </abbr>
+                  <abbr title="${translate('edit')}">
+                    <mwc-icon-button
+                      icon="edit"
+                      @click=${() => this.openEditWizard()}
+                    ></mwc-icon-button>
+                  </abbr>
+                  <abbr title="${translate('remove')}">
+                    <mwc-icon-button
+                      icon="delete"
+                      @click=${() => this.remove()}
+                    ></mwc-icon-button>
+                  </abbr>
+                </nav>`
+        }
         </nav>
       </h1>
     `;
@@ -101,6 +113,7 @@ export class SubstationEditor extends LitElement {
     return html`
       <section tabindex="0">
         ${this.renderHeader()}
+        ${this.showieds ? renderIedContainer(this.element) : html``}
         ${Array.from(this.element.querySelectorAll(selectors.VoltageLevel)).map(
           voltageLevel =>
             html`<voltage-level-editor
