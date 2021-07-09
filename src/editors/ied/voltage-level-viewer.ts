@@ -7,7 +7,7 @@ import {
   css,
 } from 'lit-element';
 
-import { styles } from './foundation.js';
+import { renderIedContainer, styles } from './foundation.js';
 import './bay-viewer.js';
 
 /** [[`Substation`]] subeditor for a `VoltageLevel` element. */
@@ -45,10 +45,10 @@ export class VoltageLevelViewer extends LitElement {
 
   render(): TemplateResult {
     return html`<section tabindex="0">
-      ${this.renderHeader()}
+      ${this.renderHeader()} ${renderIedContainer(this.element)}
       <div id="bayContainer">
         ${Array.from(
-          this.element?.querySelectorAll(
+          this.element?.ownerDocument.querySelectorAll(
             ':root > Substation > VoltageLevel > Bay'
           ) ?? []
         ).map(bay => html`<bay-viewer .element=${bay}></bay-viewer>`)}

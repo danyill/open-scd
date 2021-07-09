@@ -6,7 +6,7 @@ import {
   property,
   TemplateResult,
 } from 'lit-element';
-import { styles } from './foundation.js';
+import { renderIedContainer, styles } from './foundation.js';
 
 /** [[`SubstationEditor`]] subeditor for a `Bay` element. */
 @customElement('bay-viewer')
@@ -31,19 +31,7 @@ export class BayViewer extends LitElement {
 
   render(): TemplateResult {
     return html`<section tabindex="0">
-      ${this.renderHeader()}
-      <div id="ceContainer">
-        ${Array.from(
-          this.element?.querySelectorAll(
-            ':root > Substation > VoltageLevel > Bay > ConductingEquipment'
-          ) ?? []
-        ).map(
-          voltageLevel => html``
-          /* html`<conducting-equipment-editor
-              .element=${voltageLevel}
-            ></conducting-equipment-editor>` */
-        )}
-      </div>
+      ${this.renderHeader()}${renderIedContainer(this.element)}
     </section> `;
   }
 
@@ -53,13 +41,26 @@ export class BayViewer extends LitElement {
     section {
       margin: 0px;
     }
+  `;
+}
 
-    #ceContainer {
+/* #ceContainer {
       display: grid;
       grid-gap: 12px;
       padding: 12px;
       box-sizing: border-box;
       grid-template-columns: repeat(auto-fit, minmax(64px, auto));
-    }
-  `;
-}
+    } */
+
+/* <div id="ceContainer">
+        ${Array.from(
+          this.element?.querySelectorAll(
+            ':root > Substation > VoltageLevel > Bay > ConductingEquipment'
+          ) ?? []
+        ).map(
+          voltageLevel => html``
+           html`<conducting-equipment-editor
+              .element=${voltageLevel}
+            ></conducting-equipment-editor>` 
+            )}
+            </div> */
