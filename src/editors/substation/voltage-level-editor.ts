@@ -129,7 +129,11 @@ export class VoltageLevelEditor extends LitElement {
       ${this.showieds ? renderIedContainer(this.element) : html``}
       <div id="bayContainer">
         ${Array.from(this.element?.querySelectorAll(selectors.Bay) ?? []).map(
-          bay => html`<bay-editor .element=${bay}></bay-editor>`
+          bay => html`<bay-editor
+            .element=${bay}
+            ?readonly=${this.readonly}
+            ?showieds=${this.showieds}
+          ></bay-editor>`
         )}
       </div>
     </section>`;

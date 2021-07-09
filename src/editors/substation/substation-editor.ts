@@ -118,6 +118,8 @@ export class SubstationEditor extends LitElement {
           voltageLevel =>
             html`<voltage-level-editor
               .element=${voltageLevel}
+              ?readonly=${this.readonly}
+              ?showieds=${this.showieds}
             ></voltage-level-editor>`
         )}
       </section>

@@ -125,6 +125,7 @@ export class BayEditor extends LitElement {
           voltageLevel =>
             html`<conducting-equipment-editor
               .element=${voltageLevel}
+              ?readonly=${this.readonly}
             ></conducting-equipment-editor>`
         )}
       </div>
