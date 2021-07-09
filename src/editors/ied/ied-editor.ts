@@ -96,7 +96,7 @@ export class IedEditor extends LitElement {
   render(): TemplateResult {
     return html`
       <div id="container" tabindex="0">
-        ${circuitBreakerIcon}
+        <mwc-icon class="icon">tablet</mwc-icon>
         <mwc-fab mini class="menu-item left" icon="account_tree"></mwc-fab>
         <mwc-fab mini class="menu-item up" icon="edit"></mwc-fab>
         <mwc-fab mini class="menu-item right" icon="forward"></mwc-fab>
@@ -120,7 +120,16 @@ export class IedEditor extends LitElement {
       outline: none;
     }
 
-    #container > svg {
+    .icon {
+      color: var(--mdc-theme-on-surface);
+      --mdc-icon-size: 64px;
+      transition: transform 150ms linear, box-shadow 200ms linear;
+      outline-color: var(--mdc-theme-primary);
+      outline-style: solid;
+      outline-width: 0px;
+    }
+
+    #container > .icon {
       color: var(--mdc-theme-on-surface);
       width: 64px;
       height: 64px;
@@ -130,17 +139,17 @@ export class IedEditor extends LitElement {
       outline-width: 0px;
     }
 
-    #container:focus > svg {
+    #container:focus > .icon {
       box-shadow: 0 8px 10px 1px rgba(0, 0, 0, 0.14),
         0 3px 14px 2px rgba(0, 0, 0, 0.12), 0 5px 5px -3px rgba(0, 0, 0, 0.2);
     }
 
-    #container:hover > svg {
+    #container:hover > .icom {
       outline: 2px dashed var(--mdc-theme-primary);
       transition: transform 200ms linear, box-shadow 250ms linear;
     }
 
-    #container:focus-within > svg {
+    #container:focus-within > .icon {
       outline: 2px solid var(--mdc-theme-primary);
       background: var(--mdc-theme-on-primary);
       transform: scale(0.8);
