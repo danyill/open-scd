@@ -2,6 +2,8 @@ import { css, html, TemplateResult } from 'lit-element';
 
 import { isPublic } from '../../foundation.js';
 
+import './ied-editor.js';
+
 export type ElementEditor = Element & {
   element: Element;
 };

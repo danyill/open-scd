@@ -4,7 +4,7 @@ import { isPublic } from '../foundation.js';
 
 import { styles } from './ied/foundation.js';
 
-import './ied/substation-viewer.js';
+import './Substation/substation-editor.js';
 
 function unreferencedIeds(doc: XMLDocument): Element[] {
   const ieds = Array.from(doc.querySelectorAll(':root > IED'));
@@ -46,7 +46,11 @@ export default class IedPlugin extends LitElement {
       </div>
       ${Array.from(this.doc.querySelectorAll(':root > Substation') ?? []).map(
         substation =>
-          html`<substation-viewer .element=${substation}></substation-viewer>`
+          html`<substation-editor
+            .element=${substation}
+            readonly
+            showieds
+          ></substation-editor>`
       )}
     `;
   }
