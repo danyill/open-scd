@@ -22,6 +22,9 @@ export class ConductingEquipmentEditor extends LitElement {
   @property({ type: Element })
   element!: Element;
 
+  @property({ type: Boolean })
+  readonly = false;
+
   @property({ type: String })
   get name(): string {
     return this.element.getAttribute('name') ?? '';
@@ -59,31 +62,33 @@ export class ConductingEquipmentEditor extends LitElement {
     return html`
       <div id="container" tabindex="0">
         ${typeIcon(this.element)}
-        <mwc-fab
-          mini
-          class="menu-item left"
-          @click="${() => this.openLNodeWizard()}"
-          icon="account_tree"
-        ></mwc-fab>
-        <mwc-fab
-          mini
-          class="menu-item up"
-          icon="edit"
-          @click="${() => this.openEditWizard()}}"
-        ></mwc-fab>
-        <mwc-fab
-          mini
-          class="menu-item right"
-          @click="${() =>
-            startMove(this, ConductingEquipmentEditor, BayEditor)}"
-          icon="forward"
-        ></mwc-fab>
-        <mwc-fab
-          mini
-          class="menu-item down"
-          icon="delete"
-          @click="${() => this.remove()}}"
-        ></mwc-fab>
+        ${this.readonly
+          ? html``
+          : html`<mwc-fab
+                mini
+                class="menu-item left"
+                @click="${() => this.openLNodeWizard()}"
+                icon="account_tree"
+              ></mwc-fab>
+              <mwc-fab
+                mini
+                class="menu-item up"
+                icon="edit"
+                @click="${() => this.openEditWizard()}}"
+              ></mwc-fab>
+              <mwc-fab
+                mini
+                class="menu-item right"
+                @click="${() =>
+                  startMove(this, ConductingEquipmentEditor, BayEditor)}"
+                icon="forward"
+              ></mwc-fab>
+              <mwc-fab
+                mini
+                class="menu-item down"
+                icon="delete"
+                @click="${() => this.remove()}}"
+              ></mwc-fab>`}
       </div>
       <h4>${this.name}</h4>
     `;
