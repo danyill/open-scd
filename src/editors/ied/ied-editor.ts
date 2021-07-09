@@ -48,7 +48,7 @@ export class IedEditor extends LitElement {
         <mwc-icon class="icon">developer_board</mwc-icon>
         <mwc-fab mini class="menu-item left" icon="account_tree"></mwc-fab>
         <mwc-fab mini class="menu-item up" icon="edit"></mwc-fab>
-        <mwc-fab mini class="menu-item right" icon="forward"></mwc-fab>
+        <mwc-fab mini class="menu-item right" icon="sync_alt"></mwc-fab>
         <mwc-fab mini class="menu-item down" icon="delete"></mwc-fab>
       </div>
       <h4>${this.name}</h4>

@@ -548,6 +548,22 @@
       mwc-list-item=""
       selected=""
       tabindex="-1"
+      value="/src/editors/IED.js"
+    >
+      <mwc-icon slot="meta">
+        developer_board
+      </mwc-icon>
+      IED
+    </mwc-check-list-item>
+    <mwc-check-list-item
+      aria-disabled="false"
+      class="official"
+      graphic="control"
+      hasmeta=""
+      left=""
+      mwc-list-item=""
+      selected=""
+      tabindex="-1"
       value="/src/editors/Templates.js"
     >
       <mwc-icon slot="meta">
