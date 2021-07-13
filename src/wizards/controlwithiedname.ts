@@ -5,7 +5,6 @@ import {
   EditorAction,
   findControlBlocks,
   identity,
-  isPublic,
   Wizard,
   WizardAction,
   WizardActor,
@@ -15,7 +14,7 @@ import {
 import { List } from '@material/mwc-list';
 
 import { inputIcon } from '../icons.js';
-import { getSourceReferences } from '../menu/CommunicationMapping.js';
+import { getSourceReferences } from '../editors/ied/commap-wizards.js';
 
 function findIEDNameTarget(iedName: Element): Element | null {
   const name = iedName.textContent ?? '';
