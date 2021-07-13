@@ -1,6 +1,15 @@
-import { LitElement, html, TemplateResult, property, css } from 'lit-element';
+import { Fab } from '@material/mwc-fab';
+import {
+  LitElement,
+  html,
+  TemplateResult,
+  property,
+  css,
+  query,
+} from 'lit-element';
 import { translate, get } from 'lit-translate';
-import { isPublic } from '../foundation.js';
+import { isPublic, newWizardEvent } from '../foundation.js';
+import { communicationMappingWizard } from './ied/commap-wizards.js';
 
 import { styles } from './ied/foundation.js';
 
@@ -24,11 +33,17 @@ function unreferencedIeds(doc: XMLDocument): Element[] {
   return unreferencedIeds;
 }
 
-/** An editor [[`plugin`]] for editing the `Substation` section. */
+/** An editor [[`plugin`]] for editing the `IED` sections. */
 export default class IedPlugin extends LitElement {
   /** The document being edited as provided to plugins by [[`OpenSCD`]]. */
   @property()
   doc!: XMLDocument;
+
+  @query('#commmap') globalCommMap!: Fab;
+
+  openComminicationMapping(): void {
+    this.dispatchEvent(newWizardEvent(communicationMappingWizard(this.doc)));
+  }
 
   render(): TemplateResult {
     if (!this.doc?.querySelector('IED'))
@@ -52,6 +67,13 @@ export default class IedPlugin extends LitElement {
             showieds
           ></substation-editor>`
       )}
+      <mwc-fab
+        id="commmap"
+        extended
+        icon="sync_alt"
+        label="${translate('commMap.title')}"
+        @click=${() => this.openComminicationMapping()}
+      ></mwc-fab>
     `;
   }
 

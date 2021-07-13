@@ -1,28 +1,22 @@
 import { expect, fixture, html } from '@open-wc/testing';
 
-import CommunicationMappingPlugin from '../../../../src/menu/CommunicationMapping.js';
+import Ied from '../../../../src/editors/Ied.js';
+
 import { List } from '@material/mwc-list';
 import { MockWizardEditor } from '../../../mock-wizard-editor.js';
 
-describe('CommunicationMappingPlugin', () => {
+describe('CommunicationMappingWizards', () => {
   let doc: Document;
-  customElements.define(
-    'communication-mapping-plugin',
-    CommunicationMappingPlugin
-  );
+  customElements.define('ied-plugin', Ied);
   let parent: MockWizardEditor;
-  let element: CommunicationMappingPlugin;
+  let element: Ied;
 
   beforeEach(async () => {
     parent = await fixture(
-      html`<mock-wizard-editor
-        ><communication-mapping-plugin></communication-mapping-plugin
-      ></mock-wizard-editor>`
+      html`<mock-wizard-editor><ied-plugin></ied-plugin></mock-wizard-editor>`
     );
 
-    element = <CommunicationMappingPlugin>(
-      parent.querySelector('communication-mapping-plugin')!
-    );
+    element = <Ied>parent.querySelector('ied-plugin')!;
 
     doc = await fetch('/base/test/testfiles/comm-map.scd')
       .then(response => response.text())
@@ -32,21 +26,25 @@ describe('CommunicationMappingPlugin', () => {
   });
 
   describe('communication mapping wizard', () => {
+    let secondaryAction: HTMLElement;
+
     beforeEach(async () => {
-      await element.run();
+      await element.globalCommMap.click();
       await parent.updateComplete;
-    });
 
-    it('opens the communication mapping wizard on trigger', async () => {
-      expect(parent.wizardUI.dialogs.length).to.equal(1);
-    });
-
-    it('closes on secondary action', async () => {
-      (<HTMLElement>(
+      secondaryAction = <HTMLElement>(
         parent.wizardUI.dialog!.querySelector(
           'mwc-button[slot="secondaryAction"]'
         )
-      )).click();
+      );
+    });
+
+    it('looks like its snapshot', () => {
+      expect(parent.wizardUI.dialog).to.equalSnapshot();
+    });
+
+    it('closes on secondary action', async () => {
+      secondaryAction.click();
       await parent.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100)); // await animation
       expect(parent.wizardUI.dialogs.length).to.equal(0);
@@ -57,28 +55,15 @@ describe('CommunicationMappingPlugin', () => {
         parent.wizardUI.dialog?.querySelectorAll('mwc-list-item').length
       ).to.equal(4);
     });
-
-    it('indicates the control block type with mwc-list graphic slot', () => {
-      expect(
-        parent.wizardUI.dialog!.querySelectorAll('mwc-list-item > mwc-icon')
-          .length
-      ).to.equal(4);
-    });
-
-    it('show the source ied, sink ied and control block', () => {
-      expect(
-        parent.wizardUI.dialog!.querySelectorAll('mwc-list-item > mwc-icon')
-          .length
-      ).to.equal(4);
-    });
   });
 
   describe('control block connection wizard', () => {
     let commMappings: List;
     beforeEach(async () => {
-      await element.run();
+      await element.globalCommMap.click();
       await parent.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100)); // await animation
+
       commMappings = <List>(
         parent.wizardUI.dialog?.querySelector('filtered-list')
       );
@@ -270,7 +255,7 @@ describe('CommunicationMappingPlugin', () => {
 
   describe('connection wizard', () => {
     beforeEach(async () => {
-      await element.run();
+      await element.globalCommMap.click();
       await parent.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100)); // await animation
       (<HTMLElement>(
@@ -301,7 +286,7 @@ describe('CommunicationMappingPlugin', () => {
 
   describe('client wizard', () => {
     beforeEach(async () => {
-      await element.run();
+      await element.globalCommMap.click();
       await parent.updateComplete;
       await new Promise(resolve => setTimeout(resolve, 100)); // await animation
       (<HTMLElement>(

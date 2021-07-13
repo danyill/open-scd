@@ -7,7 +7,6 @@ import { wizards } from '../wizards/wizard-library.js';
 import { selectors, styles } from './substation/foundation.js';
 
 import './substation/substation-editor.js';
-import { SubstationEditor } from './substation/substation-editor.js';
 
 /** An editor [[`plugin`]] for editing the `Substation` section. */
 export default class SubstationPlugin extends LitElement {

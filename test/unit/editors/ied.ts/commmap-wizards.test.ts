@@ -2,9 +2,9 @@ import { expect } from '@open-wc/testing';
 import {
   getSinkReferences,
   getSourceReferences,
-} from '../../../src/menu/CommunicationMapping.js';
+} from '../../../../src/editors/ied/commap-wizards.js';
 
-describe('CommunicationMappingPlugin', () => {
+describe('Comminication Mapping Wizard', () => {
   let doc: Document;
   beforeEach(async () => {
     doc = await fetch('/base/test/testfiles/comm-map.scd')
@@ -25,25 +25,10 @@ describe('CommunicationMappingPlugin', () => {
         )
       )?.to.be.true;
     });
-    it('retruns an array of IEDNames`s for GSEControl blocks', () => {
+    it('retruns an array of ClientLN`s for both source and client root IED', () => {
       expect(
-        getSinkReferences(doc.querySelector('GSEControl')!)
-      ).to.have.length(1);
-      expect(
-        getSinkReferences(doc.querySelector('GSEControl')!)[0].isEqualNode(
-          doc.querySelector('GSEControl IEDName')
-        )
-      )?.to.be.true;
-    });
-    it('retruns an array of IEDNames`s for SampledValueControl blocks', () => {
-      expect(
-        getSinkReferences(doc.querySelector('SampledValueControl')!)
-      ).to.have.length(1);
-      expect(
-        getSinkReferences(
-          doc.querySelector('SampledValueControl')!
-        )[0].isEqualNode(doc.querySelector('SampledValueControl IEDName'))
-      )?.to.be.true;
+        getSinkReferences(doc.querySelector('IED[name="IED1"]')!)
+      ).to.have.length(4);
     });
   });
 
