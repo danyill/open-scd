@@ -9,11 +9,13 @@ export type ElementEditor = Element & {
 };
 
 export function renderIedContainer(element: Element): TemplateResult {
-  return html`<div id="iedcontainer">
-    ${attachedIeds(element).map(
-      ied => html`<ied-editor .element=${ied}></ied-editor>`
-    )}
-  </div>`;
+  return attachedIeds(element).length > 0
+    ? html`<div id="iedcontainer">
+        ${attachedIeds(element).map(
+          ied => html`<ied-editor .element=${ied}></ied-editor>`
+        )}
+      </div>`
+    : html``;
 }
 
 function containsReference(element: Element, iedName: string): boolean {

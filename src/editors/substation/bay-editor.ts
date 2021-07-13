@@ -115,19 +115,21 @@ export class BayEditor extends LitElement {
   render(): TemplateResult {
     return html`<section tabindex="0">
       ${this.renderHeader()}
-      ${this.showieds ? renderIedContainer(this.element) : html``}
-      <div id="ceContainer">
-        ${Array.from(
-          this.element?.querySelectorAll(
-            ':root > Substation > VoltageLevel > Bay > ConductingEquipment'
-          ) ?? []
-        ).map(
-          voltageLevel =>
-            html`<conducting-equipment-editor
-              .element=${voltageLevel}
-              ?readonly=${this.readonly}
-            ></conducting-equipment-editor>`
-        )}
+      <div id="box">
+        ${this.showieds ? renderIedContainer(this.element) : html``}
+        <div id="ceContainer">
+          ${Array.from(
+            this.element?.querySelectorAll(
+              ':root > Substation > VoltageLevel > Bay > ConductingEquipment'
+            ) ?? []
+          ).map(
+            voltageLevel =>
+              html`<conducting-equipment-editor
+                .element=${voltageLevel}
+                ?readonly=${this.readonly}
+              ></conducting-equipment-editor>`
+          )}
+        </div>
       </div>
     </section> `;
   }
@@ -137,6 +139,14 @@ export class BayEditor extends LitElement {
 
     section {
       margin: 0px;
+    }
+
+    #box {
+      display: grid;
+      grid-gap: 12px;
+      padding: 12px;
+      box-sizing: border-box;
+      grid-template-columns: repeat(auto-fit, minmax(100px, auto));
     }
 
     #ceContainer {
