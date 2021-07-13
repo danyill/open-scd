@@ -1,22 +1,31 @@
 import { expect, fixture, html } from '@open-wc/testing';
 
-import Ied from '../../../../src/editors/Ied.js';
+import MyIed from '../../../../src/editors/Ied.js';
 
 import { List } from '@material/mwc-list';
 import { MockWizardEditor } from '../../../mock-wizard-editor.js';
 
+const _customElementsDefine = window.customElements.define;
+window.customElements.define = (name, cl, conf) => {
+  if (!customElements.get(name)) {
+    _customElementsDefine.call(window.customElements, name, cl, conf);
+  }
+};
+
 describe('CommunicationMappingWizards', () => {
   let doc: Document;
-  customElements.define('ied-plugin', Ied);
+  customElements.define('ied-omegaplugin', MyIed);
   let parent: MockWizardEditor;
-  let element: Ied;
+  let element: MyIed;
 
   beforeEach(async () => {
     parent = await fixture(
-      html`<mock-wizard-editor><ied-plugin></ied-plugin></mock-wizard-editor>`
+      html`<mock-wizard-editor
+        ><ied-omegaplugin></ied-omegaplugin
+      ></mock-wizard-editor>`
     );
 
-    element = <Ied>parent.querySelector('ied-plugin')!;
+    element = <MyIed>parent.querySelector('ied-omegaplugin')!;
 
     doc = await fetch('/base/test/testfiles/comm-map.scd')
       .then(response => response.text())

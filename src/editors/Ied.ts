@@ -1,4 +1,3 @@
-import { Fab } from '@material/mwc-fab';
 import {
   LitElement,
   html,
@@ -7,10 +6,12 @@ import {
   css,
   query,
 } from 'lit-element';
+
 import { translate, get } from 'lit-translate';
 import { isPublic, newWizardEvent } from '../foundation.js';
 import { communicationMappingWizard } from './ied/commap-wizards.js';
 
+import { Fab } from '@material/mwc-fab';
 import { styles } from './ied/foundation.js';
 
 import './Substation/substation-editor.js';
