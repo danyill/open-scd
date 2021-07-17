@@ -2,6 +2,7 @@ import {
   css,
   customElement,
   html,
+  internalProperty,
   LitElement,
   property,
   query,
@@ -14,9 +15,14 @@ import { List } from '@material/mwc-list';
 import { SingleSelectedEvent } from '@material/mwc-list/mwc-list-foundation';
 import { ListItem } from '@material/mwc-list/mwc-list-item';
 
+export interface FinderItem {
+  name: string;
+  identity?: string | number;
+}
+
 export interface Directory {
   content: TemplateResult;
-  children: string[];
+  children: FinderItem[];
 }
 
 const waitingList = html`<mwc-list
@@ -30,15 +36,19 @@ const waitingList = html`<mwc-list
 @customElement('finder-pane')
 export class FinderPane extends LitElement {
   @property({ type: Array })
-  path: string[] = [];
+  path: FinderItem[] = [];
 
   @property({ attribute: false })
-  getChildren: (path: string[]) => Promise<Directory> = async () => {
-    return { content: html``, children: [] };
-  };
+  getChildren: (path: FinderItem[], element?: Element) => Promise<Directory> =
+    async () => {
+      return { content: html``, children: [] };
+    };
 
   @property({ attribute: false })
   loaded: Promise<void> = Promise.resolve();
+
+  @property()
+  element?: Element;
 
   @query('div')
   container!: Element;
@@ -49,7 +59,10 @@ export class FinderPane extends LitElement {
     if (!item.selected) {
       return;
     }
-    this.path.push(item.text);
+
+    const identity = item.value !== '' ? item.value : undefined;
+
+    this.path.push({ name: item.text, identity });
     this.requestUpdate();
     await this.updateComplete;
     await new Promise(resolve => setTimeout(resolve, 250));
@@ -57,14 +70,21 @@ export class FinderPane extends LitElement {
   }
 
   async renderDirectory(
-    parent: string,
+    parent: FinderItem,
     index: number
   ): Promise<TemplateResult> {
-    const progeny = await this.getChildren(this.path.slice(0, index + 1));
+    const progeny = await this.getChildren(
+      this.path.slice(0, index + 1),
+      this.element
+    );
     const children = progeny.children.map(
       child =>
-        html`<mwc-list-item ?activated=${this.path[index + 1] === child}
-          >${child}</mwc-list-item
+        html`<mwc-list-item
+          value="${child.identity}"
+          ?activated=${this.path[index + 1]
+            ? this.path[index + 1].name === child.name
+            : false}
+          >${child.name}</mwc-list-item
         >`
     );
     if (this.path.length > index + 1) {
@@ -80,7 +100,7 @@ export class FinderPane extends LitElement {
         ${children.length
           ? html`<filtered-list
               @selected=${(e: SingleSelectedEvent) => this.select(e, index)}
-              searchFieldLabel="${parent || '/'}"
+              searchFieldLabel="${parent.name || '/'}"
               >${children}</filtered-list
             >`
           : html``}

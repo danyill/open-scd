@@ -6,7 +6,7 @@ import marked from 'marked';
 import { newWizardEvent, Wizard } from '../foundation.js';
 import { openSCDIcon } from '../icons.js';
 
-import { Directory } from '../finder-pane.js';
+import { Directory, FinderItem } from '../finder-pane.js';
 
 function aboutBox(version: string) {
   return html`<div>
@@ -35,13 +35,13 @@ function aboutBox(version: string) {
     </div>`;
 }
 
-async function getLinkedPages(path: string[]): Promise<Directory> {
+async function getLinkedPages(path: FinderItem[]): Promise<Directory> {
   const edition = await (await fetch('/manifest.json')).json();
   if (path.length === 0) {
-    return { content: aboutBox(edition.version), children: ['Home'] };
+    return { content: aboutBox(edition.version), children: [{ name: 'Home' }] };
   }
 
-  const page = path[path.length - 1].replace(/ /g, '-');
+  const page = path[path.length - 1].name.replace(/ /g, '-');
   const res = await fetch(`/public/md/${page}.md`);
   const md = await res.text();
   const unlinkedMd = md.replace(
@@ -54,7 +54,9 @@ async function getLinkedPages(path: string[]): Promise<Directory> {
   </div>`;
   const children = Array.from(
     md.matchAll(/\(https:..github.com.openscd.open-scd.wiki.([^)]*)\)/g)
-  ).map(([_, child]) => child.replace(/-/g, ' '));
+  ).map(([_, child]) => {
+    return { name: child.replace(/-/g, ' ') };
+  });
 
   return { content, children };
 }
@@ -65,7 +67,7 @@ export function aboutBoxWizard(): Wizard {
       title: 'Help',
       content: [
         html`<finder-pane
-          .path=${['Home']}
+          .path=${[{ name: 'Home' }]}
           .getChildren=${getLinkedPages}
         ></finder-pane>`,
       ],

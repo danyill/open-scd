@@ -6,7 +6,16 @@ import {
   property,
   TemplateResult,
 } from 'lit-element';
-import { newActionEvent } from '../foundation.js';
+import { newActionEvent, newWizardEvent, Wizard } from '../foundation.js';
+
+function dataModelWizard(element: Element): Wizard {
+  return [
+    {
+      title: 'DataModel',
+      content: [html`<data-model-pane .element=${element}></data-model-pane>`],
+    },
+  ];
+}
 
 /** [[`SubstationEditor`]] subeditor for a `ConductingEquipment` element. */
 @customElement('ied-editor')
@@ -21,6 +30,10 @@ export class IedEditor extends LitElement {
   @property({ type: String })
   get desc(): string {
     return this.element.getAttribute('desc') ?? '';
+  }
+
+  openDataModel(): void {
+    this.dispatchEvent(newWizardEvent(dataModelWizard(this.element)));
   }
 
   remove(): void {
@@ -44,7 +57,7 @@ export class IedEditor extends LitElement {
           mini
           class="menu-item left"
           icon="account_tree"
-          disabled
+          @click=${() => this.openDataModel()}
         ></mwc-fab>
         <mwc-fab mini class="menu-item up" icon="edit" disabled></mwc-fab>
         <mwc-fab
