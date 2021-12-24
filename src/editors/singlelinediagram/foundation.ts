@@ -40,6 +40,27 @@ export function getPathNameAttribute(element: Element): string | undefined {
 }
 
 /**
+ * Get the direction of a XML element (horizontal or vertical) or that of the containing bay.
+ * @param element - The element to extract coordinates from.
+ * @returns either 'vertical', 'horizontal' or undefined.
+ */
+export function getDirection(element: Element): string | undefined {
+  const bayDirection = element?.parentElement?.getAttributeNS(
+    'http://www.iec.ch/61850/2003/SCLcoordinates',
+    'dir')
+  const objectDirection = element?.getAttributeNS(
+    'http://www.iec.ch/61850/2003/SCLcoordinates',
+    'dir')
+
+  if (bayDirection && !objectDirection) {
+    return bayDirection
+  } else if (objectDirection) {
+    return objectDirection
+  }  
+  return undefined
+}
+
+/**
  * Get the coordinates of a XML element (x and y coordinates).
  * @param element - The element to extract coordinates from.
  * @returns A point containing the coordinates.
@@ -61,7 +82,7 @@ export function getRelativeCoordinates(element: Element): Point {
 }
 
 /**
- * Get the absolute (its own and all parents') coordinates of a SCL element (x and y coordinates)
+ * Get the absolute (its own and all parents') coordinates of a SCL element (x and y coordinates).
  * @param element - The element to extract coordinates from.
  * @returns A point containing the coordinates.
  */

@@ -2,6 +2,7 @@ import { identity } from '../../foundation.js';
 import { getIcon } from '../../zeroline/foundation.js';
 import {
   connectivityNodeIcon,
+  iconColors,
   powerTransformerTwoWindingIcon,
 } from '../../icons.js';
 
@@ -12,6 +13,7 @@ import {
   Point,
   getAbsoluteCoordinates,
   calculateConnectivityNodeCoordinates,
+  getDirection,
 } from './foundation.js';
 import { getOrthogonalPath } from './ortho-connector.js';
 
@@ -364,11 +366,19 @@ export function createConductingEquipmentElement(
     { x: absolutePosition.x! - 15, y: absolutePosition.y! + 30 },
     'x-small'
   );
-  groupElement.appendChild(text);
+  
+  if (getDirection(equipmentElement)  === 'horizontal') {
+    groupElement.classList.add('rotateHorizontal');
+    text.classList.add('horizontalLabel');
+  }
 
-  if (clickAction) groupElement.addEventListener('click', clickAction);
+  const objElement = createGroupElement(text);
+  objElement.appendChild(groupElement);
+  objElement.appendChild(text);
 
-  return groupElement;
+  if (clickAction) objElement.addEventListener('click', clickAction);
+
+  return objElement;
 }
 
 /**

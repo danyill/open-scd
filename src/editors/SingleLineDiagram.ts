@@ -512,6 +512,20 @@ export default class SingleLineDiagramPlugin extends LitElement {
       overflow: hidden;
     }
 
+    .rotateHorizontal {
+      stroke-color: red;
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: rotate(90deg);
+    }
+
+    .horizontalLabel {
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: translate(24px,-16px);
+    }
+
+
     g {
       pointer-events: bounding-box;
     }
