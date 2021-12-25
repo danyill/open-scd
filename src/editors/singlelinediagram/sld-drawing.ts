@@ -367,10 +367,10 @@ export function createConductingEquipmentElement(
     'x-small'
   );
   
-  if (getDirection(equipmentElement)  === 'horizontal') {
-    groupElement.classList.add('rotateHorizontal');
-    text.classList.add('horizontalLabel');
-  }
+  // if (getDirection(equipmentElement)  === 'horizontal') {
+  //   groupElement.classList.add('rotateHorizontal');
+  //   text.classList.add('horizontalLabel');
+  // }
 
   const objElement = createGroupElement(text);
   objElement.appendChild(groupElement);

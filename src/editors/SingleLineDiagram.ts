@@ -270,6 +270,7 @@ export default class SingleLineDiagramPlugin extends LitElement {
           .forEach(element => {
             const sides = getDirections(element, cNode);
 
+            console.log(element, sides)
             const elementsTerminalPosition = getAbsolutePositionTerminal(
               element,
               sides.startDirection
