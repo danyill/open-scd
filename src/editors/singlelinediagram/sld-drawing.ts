@@ -73,8 +73,8 @@ export function getAbsolutePositionBusBar(busbar: Element): Point {
  * @param connectivityNode - The SCL element ConnectivityNode to get the position for.
  * @returns A point containing the full x/y position in px.
  */
-export function getAbsolutePositionConnectivityNode(element: Element): Point {
-  const absoluteCoordinates = calculateConnectivityNodeCoordinates(element);
+export function getAbsolutePositionConnectivityNode(connectivityNode: Element): Point {
+  const absoluteCoordinates = calculateConnectivityNodeCoordinates(connectivityNode);
   return {
     x:
       absoluteCoordinates.x! * SVG_GRID_SIZE + (SVG_GRID_SIZE - CNODE_SIZE) / 2,
@@ -144,7 +144,7 @@ function absoluteOffsetTerminal(
 /**
  * Get the absolute position in py for a equipments Terminal (based on the TERMINAL_OFFSET).
  * @param equipment - The SCL elements ConductingEquipment or PowerTransformer.
- * @param side - On which side does the terminal needs to be placed relative to the given point.
+ * @param direction - On which side does the terminal needs to be placed relative to the given point.
  */
 export function getAbsolutePositionTerminal(
   equipment: Element,
@@ -176,7 +176,7 @@ export function getConnectivityNodesDrawingPosition(
  * @param element - The element.
  * @returns The <g> element.
  */
-function createGroupElement(element: Element): SVGElement {
+function createGroupElement(element: Element): SVGGraphicsElement {
   const finalElement = document.createElementNS(
     'http://www.w3.org/2000/svg',
     'g'
@@ -209,7 +209,6 @@ function createGroupElement(element: Element): SVGElement {
 export function createSubstationElement(substation: Element): SVGElement {
   return createGroupElement(substation);
 }
-
 /**
  * Create a Voltage Level <g> element.
  * @param voltageLevel - The Voltage Level from the SCL document to use.
@@ -221,11 +220,43 @@ export function createVoltageLevelElement(voltageLevel: Element): SVGElement {
 
 /**
  * Create a Bay <g> element.
- * @param voltageLevel - The Bay from the SCL document to use.
+ * @param bay - The Bay from the SCL document to use.
  * @returns A Bay <g> element.
  */
-export function createBayElement(bay: Element): SVGElement {
+export function createBayElement(bay: Element): SVGGraphicsElement {
   return createGroupElement(bay);
+}
+
+/**
+ * Create an outline rect and name for bays and add to the <g> element
+ * @param groupElement - The SVG group element with the SVG data comprising the bay.
+ * @param bayElement - The SCL element Bay.
+ * @returns The bay SVG objects <g> element including outline and the title.
+ */
+ export function createBayOutlineElement(
+  groupElement: SVGGraphicsElement,
+  bayElement: Element,
+  clickAction?: (event: Event) => void
+): SVGGraphicsElement {
+  const outlineGroup = createGroupElement(groupElement);
+  const boundingBox = groupElement.getBBox();
+  
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', `${boundingBox.x}`);
+  rect.setAttribute('width', `${boundingBox.width}`);
+  rect.setAttribute('height', `${boundingBox.height}`);
+  rect.setAttribute('rx', '5');
+  rect.setAttribute('class', 'bayOutline');
+  outlineGroup.appendChild(rect);
+  
+  const text = createTextElement(bayElement.getAttribute('name') || 'Unknown Bay', 
+    { x: boundingBox.x, y: boundingBox.y - 18 },
+    'small');
+  text.setAttribute('class', 'bayName');
+  outlineGroup.appendChild(text);
+  
+  if (clickAction) text.addEventListener('click', clickAction);
+  return outlineGroup;
 }
 
 /**
@@ -267,7 +298,7 @@ export function createTextElement(
 export function createTerminalElement(
   terminal: Element,
   sideToDraw: Direction,
-  clickAction?: () => void
+  clickAction?: (event: Event) => void
 ): SVGElement {
   const groupElement = createGroupElement(terminal);
 
@@ -305,9 +336,12 @@ export function createTerminalElement(
  */
 export function createBusBarElement(
   busBarElement: Element,
-  busbarLength: number
+  busbarLength: number,
+  clickAction?: (event: Event) => void
 ): SVGElement {
   const groupElement = createGroupElement(busBarElement);
+  // Overwrite the type to make a distinction between Bays and Busbars.
+  groupElement.setAttribute('type', 'Busbar');
 
   const busBarName = getNameAttribute(busBarElement)!;
   const absolutePosition = getAbsolutePositionBusBar(busBarElement);
@@ -332,6 +366,8 @@ export function createBusBarElement(
   );
   groupElement.appendChild(text);
 
+  if (clickAction) groupElement.addEventListener('click', clickAction);
+
   return groupElement;
 }
 
@@ -342,7 +378,7 @@ export function createBusBarElement(
  */
 export function createConductingEquipmentElement(
   equipmentElement: Element,
-  clickAction?: () => void
+  clickAction?: (event: Event) => void
 ): SVGElement {
   const groupElement = createGroupElement(equipmentElement);
 
@@ -387,7 +423,8 @@ export function createConductingEquipmentElement(
  * @returns The Power Transformer SVG element.
  */
 export function createPowerTransformerElement(
-  powerTransformerElement: Element
+  powerTransformerElement: Element,
+  clickAction?: (event: Event) => void
 ): SVGElement {
   const groupElement = createGroupElement(powerTransformerElement);
 
@@ -413,19 +450,20 @@ export function createPowerTransformerElement(
   );
   groupElement.appendChild(text);
 
+  if (clickAction) groupElement.addEventListener('click', clickAction);
+
   return groupElement;
 }
 
 /**
  * Create a Connectivity Node element.
  * @param cNodeElement - The SCL element ConnectivityNode
- * @param position - The SCL position of the Connectivity Node.
  * @param clickAction - The action to execute when the terminal is being clicked.
  * @returns The Connectivity Node SVG element.
  */
 export function createConnectivityNodeElement(
   cNodeElement: Element,
-  clickAction?: () => void
+  clickAction?: (event: Event) => void
 ): SVGElement {
   const groupElement = createGroupElement(cNodeElement);
 
