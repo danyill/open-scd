@@ -220,18 +220,29 @@ export function startMove<E extends ElementEditor, P extends ElementEditor>(
  * @returns The icon.
  */
 export function getIcon(condEq: Element): TemplateResult {
+  console.log('icon', typeStr(condEq))
   return typeIcons[typeStr(condEq)] ?? generalConductingEquipmentIcon;
 }
 
+// function typeStr(condEq: Element): string {
+//   if (
+//     condEq.getAttribute('type') === 'DIS' &&
+//     condEq.querySelector('Terminal')?.getAttribute('cNodeName') === 'grounded'
+//   ) {
+//     return 'ERS';
+//   } else {
+//     return condEq.getAttribute('type') ?? '';
+//   }
+// }
 function typeStr(condEq: Element): string {
-  if (
-    condEq.getAttribute('type') === 'DIS' &&
-    condEq.querySelector('Terminal')?.getAttribute('cNodeName') === 'grounded'
-  ) {
-    return 'ERS';
-  } else {
-    return condEq.getAttribute('type') ?? '';
-  }
+  console.log(condEq.getAttribute('type') === 'DIS' &&
+    Array.from(condEq.querySelectorAll('Terminal')).map(t => t.getAttribute('cNodeName')).includes('grounded')
+    ? 'ERS'
+    : condEq.getAttribute('type') ?? '')
+  return condEq.getAttribute('type') === 'DIS' &&
+    Array.from(condEq.querySelectorAll('Terminal')).map(t => t.getAttribute('cNodeName')).includes('grounded')
+    ? 'ERS'
+    : condEq.getAttribute('type') ?? '';
 }
 
 const typeIcons: Partial<Record<string, TemplateResult>> = {

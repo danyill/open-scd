@@ -382,11 +382,16 @@ export function createConductingEquipmentElement(
 ): SVGElement {
   const groupElement = createGroupElement(equipmentElement);
 
+  const iconElement = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'g'
+  );
   const absolutePosition = getAbsolutePosition(equipmentElement);
   const parsedIcon = new DOMParser().parseFromString(
     getIcon(equipmentElement).strings[0],
     'application/xml'
   );
+  console.log(equipmentElement.getAttribute('name'), getIcon(equipmentElement).strings[0])
   parsedIcon.querySelectorAll('circle,path,line').forEach(icon => {
     icon.setAttribute(
       'transform',
@@ -394,27 +399,30 @@ export function createConductingEquipmentElement(
         EQUIPMENT_SIZE / 25
       })`
     );
-    groupElement.appendChild(icon);
+    iconElement.appendChild(icon);
   });
+  iconElement.setAttribute('type', 'icon');
+  groupElement.append(iconElement);
 
   const text = createTextElement(
     getNameAttribute(equipmentElement)!,
     { x: absolutePosition.x! - 15, y: absolutePosition.y! + 30 },
     'x-small'
   );
+  text.setAttribute('type', 'label');
   
   // if (getDirection(equipmentElement)  === 'horizontal') {
-  //   groupElement.classList.add('rotateHorizontal');
+  //   iconElement.classList.add('rotateHorizontal');
   //   text.classList.add('horizontalLabel');
   // }
 
-  const objElement = createGroupElement(text);
-  objElement.appendChild(groupElement);
-  objElement.appendChild(text);
+  // const textElement = createGroupElement(text);
+  // textElement.append(text);
+  groupElement.append(text)
+  
+  if (clickAction) groupElement.addEventListener('click', clickAction);
 
-  if (clickAction) objElement.addEventListener('click', clickAction);
-
-  return objElement;
+  return groupElement;
 }
 
 /**
@@ -568,7 +576,9 @@ export function getDirections(
 ): PointDirections {
   const pointA = getAbsoluteCoordinates(equipment);
   const pointB = calculateConnectivityNodeCoordinates(cNode);
-
+  // if (equipment.getAttribute('name') == 'DIS257') {
+  //   return { startDirection: 'right', endDirection: 'left' };
+  // };
   if (pointA.y < pointB.y && pointA.x < pointB.x)
     return { startDirection: 'bottom', endDirection: 'left' };
 

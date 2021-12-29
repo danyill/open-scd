@@ -253,6 +253,7 @@ export default class SingleLineDiagramPlugin extends LitElement {
               terminal => terminal.getAttribute('cNodeName') !== 'grounded'
             ).length !== 0)
       .forEach(conductingEquipmentElement => {
+        console.log(conductingEquipmentElement.getAttribute('name'), 'xx')
         const conductingEquipmentGroup = createConductingEquipmentElement(conductingEquipmentElement,
           (event: Event) => this.openEditWizard(event, conductingEquipmentElement!)
         );
@@ -287,12 +288,15 @@ export default class SingleLineDiagramPlugin extends LitElement {
   private drawBayConnections(rootElement: Element, rootGroup: SVGElement, bayElement: Element): void {
     this.getConnectivityNode(bayElement)
       .forEach(cNode => {
+        console.log(cNode)
         this.findEquipment(rootElement, getPathNameAttribute(cNode))
           .forEach(equipmentElement => {
+            console.log(equipmentElement)
             const commonParentElement = getCommonParentElement(cNode, equipmentElement, bayElement);
             const sides = getDirections(equipmentElement, cNode);
-
-            console.log(element, sides)
+            if (equipmentElement.getAttribute('name')?.startsWith('DIS')) {
+              console.log(equipmentElement, sides)
+            }
             const elementsTerminalPosition = getAbsolutePositionTerminal(
               equipmentElement,
               sides.startDirection
