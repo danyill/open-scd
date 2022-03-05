@@ -438,6 +438,13 @@ export const en = {
       yCoordinateHelper: 'Y-Coordinate for Single Line Diagram',
     },
   },
+  cleanup: {
+    unusedDatasets: {
+      title: 'Unused Datasets',
+      deleteButton: 'Remove Selected Datasets',
+      tooltip: 'Datasets without an associated Sampled Value, Report or GOOSE Control Block'
+    }
+  },
   add: 'Add',
   new: 'New',
   remove: 'Remove',

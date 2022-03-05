@@ -441,6 +441,13 @@ export const de: Translations = {
       yCoordinateHelper: 'Y-Koordinate im Einphasenersatzschaltbild',
     },
   },
+  cleanup: {
+    unusedDatasets: {
+      title: 'Unbenutzter Datensatz',
+      deleteButton: 'Ausgewählten Datensatz entfernen',
+      tooltip: 'Datensatz ohne zugeordneten Sampled Value, Report oder GOOSE Control Block'
+    }
+  },
   add: 'Hinzufügen',
   new: 'Neu',
   remove: 'Entfernen',
