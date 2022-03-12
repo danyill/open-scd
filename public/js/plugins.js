@@ -136,8 +136,8 @@ export const officialPlugins = [
     position: 'bottom'
   },
   {
-    name: 'Plugin Demo',
-    src: '/src/menu/DemoMenuPlugin.js',
+    name: 'Extension Demo',
+    src: '/src/menu/Demo.js',
     icon: 'electrical_services',
     default: false,
     kind: 'menu',

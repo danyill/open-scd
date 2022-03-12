@@ -1,25 +1,13 @@
-import { html, LitElement, TemplateResult } from 'lit-element';
+import { html, LitElement } from 'lit-element';
 
-// import { css, html, LitElement, query, TemplateResult } from 'lit-element';
 // import { get } from 'lit-translate';
 
 import '@material/mwc-list/mwc-check-list-item';
-// import { List } from '@material/mwc-list';
+import '@material/mwc-list';
 // import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 
 import '../filtered-list.js';
-// import {
-//   cloneElement,
-//   identity,
-//   isPublic,
-//   newWizardEvent,
-//   SCLTag,
-//   selector,
-//   Wizard,
-//   WizardAction,
-//   WizardActor,
-//   WizardInput,
-// } from '../foundation.js';
+import { newWizardEvent, Wizard } from '../foundation.js';
 
 /**
  * Checks if an array contains duplicate values.
@@ -60,8 +48,64 @@ function convertToMacString(address: number) {
   return readableMac.toUpperCase();
 }
 
+function doNothing() {
+  console.log('I did nothing');
+}
+
+function createMACInfoWizard(
+  lowestAddress: string,
+  highestAddress: string,
+  duplicates: string[] | []
+): Wizard {
+  return [
+    {
+      title: 'GOOSE MAC Address Information',
+      // primary: {
+      //   label: get('save'),
+      //   icon: 'save',
+      //   action: doNothing(duplicates),
+      // },
+      content: [
+        html`<filtered-list multi>
+          <mwc-check-list-item
+            twoline
+            selected
+            value="${lowestAddress}"
+            >
+            <span>${lowestAddress}</span>
+            <span slot="secondary"
+            >Lowest GOOSE MAC Address</span
+          ></mwc-check-list-item
+          >
+          <mwc-check-list-item
+            twoline
+            selected
+            value="${highestAddress}"
+            <span>${highestAddress}</span>
+            <span slot="secondary"
+            >Highest GOOSE MAC Address</span
+          ></mwc-check-list-item
+          >
+          ${Array.from(
+            duplicates.map(
+              item =>
+                html`<mwc-check-list-item twoline selected value="${item}">
+                  <span>${item}</span>
+                  <span slot="secondary"
+                    >Duplicate MAC Address!</span
+                  ></mwc-check-list-item
+                >`
+            )
+          )}</filtered-list
+        >`,
+      ],
+    },
+  ];
+}
+
 /**
- * Plug-in to illustrate a menu plugin -- provides the highest and lowest MAC addresses used.
+ * Plug-in to illustrate a menu plugin -- provides the highest and lowest MAC addresses used
+ * and indicate any duplicates.
  */
 export default class MenuPluginDemo extends LitElement {
   /** The document being edited as provided to plugins by [[`OpenSCD`]]. */
@@ -86,53 +130,26 @@ export default class MenuPluginDemo extends LitElement {
     const highestAddress = Math.max(...sortedDecMacAddresses);
     const lowestAddress = Math.min(...sortedDecMacAddresses);
 
-    console.log(convertToMacString(highestAddress));
-    console.log(convertToMacString(lowestAddress));
+    console.log('Highest MAC address', convertToMacString(highestAddress));
+    console.log('Lowest MAC address', convertToMacString(lowestAddress));
+    let duplicates: string[] = [];
     if (hasDuplicates(sortedDecMacAddresses)) {
       console.log('Found at least one duplicate MAC address');
-      console.log(
-        findDuplicates(sortedDecMacAddresses).map(address =>
-          convertToMacString(address)
-        )
+      duplicates = findDuplicates(sortedDecMacAddresses).map(address =>
+        convertToMacString(address)
       );
     } else {
       console.log('Found no duplicates');
     }
 
-    // console.log(macAddressesAsHex)
-    // .map(
-    //   dotype =>
-    //     html`<mwc-list-item
-    //       twoline
-    //       value="${identity(dotype)}"
-    //       tabindex="0"
-    //       hasMeta
-    //       ><span>${dotype.getAttribute('id')}</span
-    //       ><span slot="secondary">${dotype.getAttribute(
-    //         'cdc'
-    //       )}</span></span><span slot="meta"
-    //         >${dotype.querySelectorAll('SDO, DA').length}</span
-    //       ></mwc-list-item
-    //     >`
-    // )
-  }
-
-  //           @closing=${console.log("Was closed")}
-  render(): TemplateResult {
-    return html` <mwc-dialog id="settings" heading="Stuff">
-      <wizard-divider></wizard-divider>
-      <section>
-        <h3>Hi</h3>
-        <span>blah</span>
-      </section>
-      <mwc-button
-        icon="save"
-        trailingIcon
-        slot="primaryAction"
-        dialogAction="save"
-      >
-        ${`OK`}
-      </mwc-button>
-    </mwc-dialog>`;
+    this.dispatchEvent(
+      newWizardEvent(
+        createMACInfoWizard(
+          convertToMacString(lowestAddress),
+          convertToMacString(highestAddress),
+          duplicates
+        )
+      )
+    );
   }
 }
