@@ -135,4 +135,13 @@ export const officialPlugins = [
     requireDoc: false,
     position: 'bottom'
   },
+  {
+    name: 'Plugin Demo',
+    src: '/src/menu/DemoMenuPlugin.js',
+    icon: 'electrical_services',
+    default: false,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'middle'
+  }
 ];
