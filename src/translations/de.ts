@@ -50,8 +50,9 @@ export const de: Translations = {
     showieds: 'Zeige IEDs im Substation-Editor',
     selectFileButton: 'Datei auswählen',
     loadNsdTranslations: 'NSDoc-Dateien hochladen',
-    invalidFileNoIdFound: 'Ungültiges NSDoc; kein \'id\'-Attribut in der Datei gefunden',
-    invalidNsdocVersion: '???'
+    invalidFileNoIdFound:
+      "Ungültiges NSDoc; kein 'id'-Attribut in der Datei gefunden",
+    invalidNsdocVersion: '???',
   },
   menu: {
     new: 'Neues projekt',
@@ -442,11 +443,12 @@ export const de: Translations = {
     },
   },
   cleanup: {
-    unusedDatasets: {
-      title: 'Unbenutzter Datensatz',
+    unreferencedDataSets: {
+      title: 'Nicht referenzierte Datensätze',
       deleteButton: 'Ausgewählten Datensatz entfernen',
-      tooltip: 'Datensatz ohne zugeordneten GOOSE, Log, Report oder Sampled Value Control Block'
-    }
+      tooltip:
+        'DatenSätze ohne Verweis auf einen zugehörigen GOOSE-, Log-, Report- oder Sampled Value Control Block',
+    },
   },
   add: 'Hinzufügen',
   new: 'Neu',
