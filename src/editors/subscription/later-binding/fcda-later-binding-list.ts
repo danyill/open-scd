@@ -26,6 +26,7 @@ import { smvIcon } from '../../../icons/icons.js';
 import { wizards } from '../../../wizards/wizard-library.js';
 
 import { styles } from '../foundation.js';
+import { isPublic } from '../../../foundation.js';
 
 import { getFcdaTitleValue, newFcdaSelectEvent } from './foundation.js';
 
@@ -77,6 +78,34 @@ export class FCDALaterBindingList extends LitElement {
     return [];
   }
 
+  /**
+   * Counts usage of an IEDs FCDA defined within a dataset within ExtRefs in a project SCL file.
+   * @param fcdaElement - an FCDA element from a dataset.
+   * @returns the number of times this FCDA is used in ExtRefs in the project.
+   */
+  private countExtRefUsageOfFCDA(fcdaElement: Element): number {
+    const iedName = fcdaElement.closest('IED')?.getAttribute('name') ?? null;
+    const [ldInst, prefix, lnClass, lnInst, doName, daName] = [
+      'ldInst',
+      'prefix',
+      'lnClass',
+      'lnInst',
+      'doName',
+      'daName',
+    ].map(attr => fcdaElement.getAttribute(attr));
+    return Array.from(this.doc.querySelectorAll(`Inputs > ExtRef[iedName="${iedName}"][ldInst="${ldInst}"][prefix="${prefix}"][lnClass="${lnClass}"][lnInst="${lnInst}"][doName="${doName}"][daName="${daName}"]`)).filter(isPublic).length
+  }
+
+  /**
+   * Display the number of ExtRefs used for a given FCDA if non-zero
+   * @param fcdaElement - an FCDA element from a dataset.
+   * @returns a non-empty string if there is more than one mapping
+   */
+  private displayExtRefUsage(fcdaElement: Element): string {
+    const count = this.countExtRefUsageOfFCDA(fcdaElement)
+    return count === 0 ? '' : count.toString()
+  }
+
   private openEditWizard(controlElement: Element): void {
     const wizard = wizards[this.controlTag].edit(controlElement);
     if (wizard) this.dispatchEvent(newWizardEvent(wizard));
@@ -115,6 +144,7 @@ export class FCDALaterBindingList extends LitElement {
   renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
     return html`<mwc-list-item
       graphic="large"
+      hasMeta
       twoline
       class="subitem"
       @click=${() => this.onFcdaSelect(controlElement, fcdaElement)}
@@ -131,6 +161,7 @@ export class FCDALaterBindingList extends LitElement {
         ${fcdaElement.getAttribute('lnInst')}
       </span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
+      <span slot="meta">${this.displayExtRefUsage(fcdaElement)}</span>
     </mwc-list-item>`;
   }
 
