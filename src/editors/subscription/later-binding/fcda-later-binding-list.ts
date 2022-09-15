@@ -48,6 +48,9 @@ export class FCDALaterBindingList extends LitElement {
   @state()
   selectedFcdaElement: Element | undefined;
 
+  @property({ attribute: false })
+  fcdaCount = new Map();
+
   constructor() {
     super();
 
@@ -78,6 +81,19 @@ export class FCDALaterBindingList extends LitElement {
     return [];
   }
 
+  private indexFCDAs() {
+    // index each fcda to display the count promptly
+    const controlElements = this.getControlElements();
+    let fcdas: Element[] = [];
+    controlElements.forEach(controlElement => {
+      fcdas = fcdas.concat(...this.getFcdaElements(controlElement));
+    });
+
+    fcdas.forEach(fcda => {
+      this.fcdaCount.set(identity(fcda), this.countExtRefUsageOfFCDA(fcda));
+    });
+  }
+
   /**
    * Counts usage of an IEDs FCDA defined within a dataset within ExtRefs in a project SCL file.
    * @param fcdaElement - an FCDA element from a dataset.
@@ -93,17 +109,20 @@ export class FCDALaterBindingList extends LitElement {
       'doName',
       'daName',
     ].map(attr => fcdaElement.getAttribute(attr));
-    return Array.from(this.doc.querySelectorAll(`Inputs > ExtRef[iedName="${iedName}"][ldInst="${ldInst}"][prefix="${prefix}"][lnClass="${lnClass}"][lnInst="${lnInst}"][doName="${doName}"][daName="${daName}"]`)).filter(isPublic).length
+    return Array.from(
+      this.doc.querySelectorAll(
+        `Inputs > ExtRef[iedName="${iedName}"][ldInst="${ldInst}"][prefix="${prefix}"][lnClass="${lnClass}"][lnInst="${lnInst}"][doName="${doName}"][daName="${daName}"]`
+      )
+    ).filter(isPublic).length;
   }
 
   /**
-   * Display the number of ExtRefs used for a given FCDA if non-zero
-   * @param fcdaElement - an FCDA element from a dataset.
-   * @returns a non-empty string if there is more than one mapping
+   * Display the number of ExtRefs used for a given FCDA
+   * @param fcdaElement - an SCL FCDA element from a dataset.
+   * @returns a count of mappings otherwise returns zero
    */
-  private displayExtRefUsage(fcdaElement: Element): string {
-    const count = this.countExtRefUsageOfFCDA(fcdaElement)
-    return count === 0 ? '' : count.toString()
+  private getExtRefUsageCount(fcdaElement: Element): number {
+    return this.fcdaCount.get(identity(fcdaElement)) || 0;
   }
 
   private openEditWizard(controlElement: Element): void {
@@ -126,6 +145,9 @@ export class FCDALaterBindingList extends LitElement {
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
 
+    // update index
+    this.indexFCDAs();
+
     // When the document is updated, we will fire the event again.
     if (
       _changedProperties.has('doc') ||
@@ -142,6 +164,12 @@ export class FCDALaterBindingList extends LitElement {
   }
 
   renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
+    // carry out indexing if not existing
+    if (this.fcdaCount.size === 0) {
+      this.indexFCDAs();
+    }
+    const fcdaCount = this.getExtRefUsageCount(fcdaElement) 
+    const fcdaCountHtml = fcdaCount !== 0 ? html`<span slot="meta">${fcdaCount}</span>` : ''
     return html`<mwc-list-item
       graphic="large"
       hasMeta
@@ -161,7 +189,7 @@ export class FCDALaterBindingList extends LitElement {
         ${fcdaElement.getAttribute('lnInst')}
       </span>
       <mwc-icon slot="graphic">subdirectory_arrow_right</mwc-icon>
-      <span slot="meta">${this.displayExtRefUsage(fcdaElement)}</span>
+      ${fcdaCountHtml}
     </mwc-list-item>`;
   }
 
