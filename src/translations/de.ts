@@ -756,6 +756,9 @@ export const de: Translations = {
       stackExceeded: 'Maximale Aufrufe überschritten. Maximal zulässig sind {{maxStackDepth}}. Nicht alle überflüßigen Datentypen sind entfernt und das Project is potentiel beschädigt.',
     }
   },
+  multicastNaming: {
+    title: 'Select IEDs'
+  },
   controlblock: {
     action: {
       edit: '{{type}} "{{name}}" in IED {{iedName}} bearbeitet',
