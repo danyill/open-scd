@@ -310,7 +310,6 @@ export class ExtRefLaterBindingList extends LitElement {
         ? html`${availableExtRefs.map(
             extRefElement => html` <mwc-list-item
               graphic="large"
-              ?disabled=${this.unsupportedExtRefElement(extRefElement)}
               twoline
               @click=${() => {
                 const replaceAction = this.subscribe(extRefElement);
