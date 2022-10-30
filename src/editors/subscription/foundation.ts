@@ -344,11 +344,11 @@ export function findOrCreateAvailableLNInst(
   return newElement;
 }
 
-/** Returns an new or existing LN instance available for supervision instantiation
+/** Returns the subscriber's supervision LN for a given control block and extRef element
  *
  * @param extRef - The extRef SCL element in the subscribing IED.
  * @param controlBlock  - The publishing IED control block.
- * @returns The supervision LN instance or null if no LN instance could be found or created.
+ * @returns The supervision LN instance or null if not found
  */
 export function getExistingSupervision(
   extRef: Element,
