@@ -5,6 +5,7 @@ import {
   Create,
   createElement,
   Delete,
+  findControlBlocks,
   getSclSchemaVersion,
   minAvailableLnInst,
 } from '../../foundation.js';
@@ -341,6 +342,31 @@ export function findOrCreateAvailableLNInst(
     instantiatedSibling.getAttribute('lnType') ?? ''
   );
   return newElement;
+}
+
+/** Returns an new or existing LN instance available for supervision instantiation
+ *
+ * @param extRef - The extRef SCL element in the subscribing IED.
+ * @param controlBlock  - The publishing IED control block.
+ * @returns The supervision LN instance or null if no LN instance could be found or created.
+ */
+export function getExistingSupervision(
+  extRef: Element,
+  controlBlock: Element
+): Element | undefined {
+  const subscriberIED = extRef.closest('IED')!;
+  const supervisionType =
+    controlBlock.tagName === 'GSEControl' ? 'LGOS' : 'LSVS';
+  const refSelector =
+    supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
+  const supervisionElement = Array.from(
+    subscriberIED.querySelectorAll(`LN[lnClass="${supervisionType}"]`)
+  ).find(
+    ln =>
+      ln.querySelector(`${refSelector}>DAI[name="setSrcRef"]>Val`)
+        ?.textContent === controlBlockReference(controlBlock)
+  );
+  return supervisionElement;
 }
 
 /**
