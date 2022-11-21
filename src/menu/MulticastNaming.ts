@@ -71,10 +71,10 @@ export default class MulticastNamingPlugin extends LitElement {
       </div>
       <control-list
         .doc=${this.doc}
-        .publisherGOOSE=${this.publisherGOOSE}
-        .publisherSMV=${this.publisherSMV}
-        .protection1=${this.protection1}
-        .protection2=${this.protection2}
+        ?publisherGOOSE=${this.publisherGOOSE}
+        ?publisherSMV=${this.publisherSMV}
+        ?protection1=${this.protection1}
+        ?protection2=${this.protection2}
         ></control-list>
       <mwc-button
       outlined

@@ -57,16 +57,16 @@ export class ControlList extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
 
-  @property()
+  @property({type: Boolean})
   publisherGOOSE!: boolean;
 
-  @property()
+  @property({type: Boolean})
   publisherSMV!: boolean;
 
-  @property()
+  @property({type: Boolean})
   protection1!: boolean;
 
-  @property()
+  @property({type: Boolean})
   protection2!: boolean;
 
   @query('.selectionlist') selectionList!: FilteredList;
