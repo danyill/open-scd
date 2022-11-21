@@ -754,7 +754,8 @@ export const en = {
     }
   },
   multicastNaming: {
-    title: 'Select IEDs'
+    heading: 'Apply Multicast Naming Convention',
+    title: 'Select IEDs',
   },
   controlblock: {
     action: {

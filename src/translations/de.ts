@@ -757,7 +757,8 @@ export const de: Translations = {
     }
   },
   multicastNaming: {
-    title: 'Select IEDs'
+    heading: 'Apply naming convention to {{ name }}',
+    title: 'Select IEDs',
   },
   controlblock: {
     action: {

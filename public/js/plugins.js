@@ -98,13 +98,6 @@ export const officialPlugins = [
     kind: 'editor',
   },
   {
-    name: 'TP Multicast Naming',
-    src: '/src/editors/MulticastNaming.js',
-    icon: 'auto_fix_normal',
-    default: true,
-    kind: 'editor',
-  },  
-  {
     name: 'Open project',
     src: '/src/menu/OpenProject.js',
     icon: 'folder_open',
@@ -153,6 +146,15 @@ export const officialPlugins = [
     kind: 'menu',
     requireDoc: true,
     position: 'middle',
+  },
+  {
+    name: 'TP Multicast Naming',
+    src: '/src/menu/MulticastNaming.js',
+    icon: 'auto_fix_normal',
+    default: true,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'bottom',
   },
   {
     name: 'Create Virtual IED',
