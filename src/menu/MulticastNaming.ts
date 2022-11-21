@@ -27,14 +27,14 @@ export default class MulticastNamingPlugin extends LitElement {
   @query('mwc-dialog')
   dialog!: Dialog;
 
-  @state()
-  private publisherGOOSE = true;
-  @state()
-  private publisherSMV = true;
-  @state()
-  private protection1 = true;
-  @state()
-  private protection2 = true;
+  @property()
+  publisherGOOSE = true;
+  @property()
+  publisherSMV = true;
+  @property()
+  protection1 = true;
+  @property()
+  protection2 = true;
 
   async run(): Promise<void> {
     this.dialog.open = true;
@@ -49,22 +49,22 @@ export default class MulticastNamingPlugin extends LitElement {
         <mwc-formfield label="GOOSE"
           ><mwc-checkbox
             value="GOOSE"
-            ?checked=${this.publisherSMV}
-            @checked=${() => (this.publisherSMV = !this.publisherSMV)}
+            ?checked=${this.publisherGOOSE}
+            @change=${() => (this.publisherGOOSE = !this.publisherGOOSE)}
           ></mwc-checkbox></mwc-formfield
-        ><mwc-formfield label="SampledValue"
+        ><mwc-formfield label="Sampled Value"
           ><mwc-checkbox
             value="SampledValue"
-            ?checked=${this.publisherGOOSE}
-            @checked=${() => (this.publisherGOOSE = !this.publisherGOOSE)}
+            ?checked=${this.publisherSMV}
+            @change=${() => (this.publisherSMV = !this.publisherSMV)}
           ></mwc-checkbox></mwc-formfield
         >
         <mwc-formfield label="Prot 1"
-          ><mwc-checkbox ?checked=${true} @checked=${() =>
+          ><mwc-checkbox ?checked=${this.protection1} @change=${() =>
       (this.protection1 = !this.protection1)}></mwc-checkbox
         ></mwc-formfield>
         <mwc-formfield label="Prot 2"
-          ><mwc-checkbox ?checked=${false} @checked=${() =>
+          ><mwc-checkbox ?checked=${this.protection2} @change=${() =>
       (this.protection2 = !this.protection2)}></mwc-checkbox
         ></mwc-formfield>
       </div>

@@ -37,11 +37,12 @@ function isEven(num: number): boolean {
 }
 
 // need a unit test
-function selectProtections(iedName: string, protection: string) {
-  const protectionNumber = iedName.split('_').slice(-1)[0] ?? null;
-  if (protection === '2' && isEven(parseInt(protectionNumber))) {
+function selectProtections(iedName: string, protection: string): boolean {
+  const protectionNumber = iedName.split('_').slice(-1)[0] ?? 'None';
+  if (protection.includes('1') && !isEven(parseInt(protectionNumber[1]))) {
     return true;
-  } else if (protection === '1' && !isEven(parseInt(protectionNumber))) {
+  }
+  if (protection.includes('2')  && isEven(parseInt(protectionNumber[1]))) {
     return true;
   }
   return false;
@@ -73,20 +74,26 @@ export class ControlList extends LitElement {
   @query('mwc-button') selectGSEControlButton!: Button;
 
   renderSelectionList(): TemplateResult {
+    const selectorString = selectControlBlockTypes(this.publisherGOOSE, this.publisherSMV)
+    const protectionSelection = `${this.protection1 ? '1' : ''}${this.protection2 ? '2' : ''}`
+
+    if (this.publisherGOOSE === false && this.publisherSMV === false) return html`<filtered-list multi class="selection-list"></filtered-list>`
+    
     return html`<filtered-list multi class="selection-list"
       >${Array.from(this.doc.querySelectorAll('IED'))
         .filter(
           ied =>
-            ied.querySelector(selectControlBlockTypes(this.publisherGOOSE, this.publisherSMV)) !== null
+            ied.querySelector(selectorString) !== null
         )
+        .filter(ied => selectProtections(ied.getAttribute('name')!, protectionSelection))
         .sort(compareNames)
         .flatMap(ied => {
-          const ieditem = html`<mwc-list-item
+          const iedItem = html`<mwc-list-item
               class="listitem header"
               noninteractive
               graphic="icon"
               value="${Array.from(
-                ied.querySelectorAll(selectControlBlockTypes(this.publisherGOOSE, this.publisherSMV))
+                ied.querySelectorAll(selectorString)
               )
                 .map(element => {
                   const id = identity(element) as string;
@@ -101,7 +108,7 @@ export class ControlList extends LitElement {
             <li divider role="separator"></li>`;
 
           const controls = Array.from(
-            ied.querySelectorAll(selectControlBlockTypes(this.publisherGOOSE, this.publisherSMV))
+            ied.querySelectorAll(selectorString)
           ).map(
             controlElement =>
               html`<mwc-check-list-item
@@ -121,14 +128,13 @@ export class ControlList extends LitElement {
               </mwc-check-list-item>`
           );
 
-          return [ieditem, ...controls];
+          return [iedItem, ...controls];
         })}</filtered-list
     > `;
   }
 
   render(): TemplateResult {
     if (!this.doc) return html``;
-
     return html` <div class="content">${this.renderSelectionList()}</div>`;
   }
 
@@ -136,10 +142,10 @@ export class ControlList extends LitElement {
     selection-list,
     prot-type {
       display: block;
+      min-width: 600px;
     }
 
     .content {
-      justify-content: center;
       max-width: 800px;
       max-height: 60vh;
     }
