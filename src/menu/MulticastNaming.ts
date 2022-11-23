@@ -20,7 +20,14 @@ import { List, MWCListIndex } from '@material/mwc-list';
 import '../filtered-list.js';
 
 import { gooseIcon, smvIcon } from '../icons/icons.js';
-import { compareNames, identity } from '../foundation.js';
+import {
+  compareNames,
+  ComplexAction,
+  identity,
+  newActionEvent,
+  newLogEvent,
+  SimpleAction,
+} from '../foundation.js';
 
 type MacObject = {
   [key: string]: {
@@ -28,15 +35,37 @@ type MacObject = {
   };
 };
 
-const gseMAC = {
+type AppObject = {
+  [key: string]: {
+    [key: string]: () => string;
+  };
+};
+
+const GSEMAC = {
   P1: { min: 0x010ccd010000, max: 0x010ccd0100ff },
   P2: { min: 0x010ccd010100, max: 0x010ccd0101ff },
 };
 
-const smvMAC = {
+const SMVMAC = {
   P1: { min: 0x010ccd040000, max: 0x010ccd0400ff },
   P2: { min: 0x010ccd040100, max: 0x010ccd0401ff },
 };
+
+const GSEAPPID = {
+  P1: { min: 0x8001, max: 0x8fff },
+  P2: { min: 0x9001, max: 0x9fff },
+  N: { min: 0x0001, max: 0x4fff },
+};
+
+const SMVAPPID = {
+  P1: { min: 0x5000, max: 0x5fff },
+  P2: { min: 0x6000, max: 0x6fff },
+};
+
+const VLAN_GSE_P1 = 1000;
+const VLAN_GSE_P2 = 1006;
+const VLAN_SMV_P1 = 1001;
+const VLAN_SMV_P2 = 1007;
 
 function convertToMac(mac: number): string {
   const str = 0 + mac.toString(16).toUpperCase();
@@ -48,6 +77,12 @@ function macRange(min: number, max: number): string[] {
   return Array(max - min)
     .fill(1)
     .map((_, i) => convertToMac(min + i));
+}
+
+function appIdRange(min: number, max: number): string[] {
+  return Array(max - min)
+    .fill(1)
+    .map((_, i) => (min + i).toString(16).toUpperCase().padStart(4, '0'));
 }
 
 /**
@@ -71,13 +106,13 @@ export function macAddressGenerator(
   if (serviceType === 'GSE')
     range =
       protectionType === '1'
-        ? macRange(gseMAC.P1.min, gseMAC.P1.max)
-        : macRange(gseMAC.P2.min, gseMAC.P2.max);
+        ? macRange(GSEMAC.P1.min, GSEMAC.P1.max)
+        : macRange(GSEMAC.P2.min, GSEMAC.P2.max);
   else if (serviceType === 'SMV')
     range =
       protectionType === '1'
-        ? macRange(smvMAC.P1.min, smvMAC.P1.max)
-        : macRange(smvMAC.P2.min, smvMAC.P2.max);
+        ? macRange(SMVMAC.P1.min, SMVMAC.P1.max)
+        : macRange(SMVMAC.P2.min, SMVMAC.P2.max);
 
   range = range.filter(mac => !ignoreMACs.includes(mac));
 
@@ -85,6 +120,49 @@ export function macAddressGenerator(
     const uniqueMAC = range.find(mac => !macs.has(mac));
     if (uniqueMAC) macs.add(uniqueMAC);
     return uniqueMAC ?? '';
+  };
+}
+
+/**
+ * @param doc - project xml document
+ * @param serviceType - SampledValueControl (SMV) or GSEControl (GSE)
+ * @param type - whether the GOOSE is a Trip GOOSE resulting in different APPID range - default false
+ * @returns a function generating increasing unused `APPID` within `doc` on subsequent invocations
+ */
+export function appIdGenerator(
+  doc: XMLDocument,
+  serviceType: 'SMV' | 'GSE',
+  protectionType: '1' | '2' | 'N',
+  ignoreAppIds: string[]
+): () => string {
+  const appIds = new Set(
+    Array.from(
+      doc.querySelectorAll(`${serviceType} > Address > P[type="APPID"]`)
+    ).map(appId => appId.textContent!)
+  );
+
+  let range: string[] = [];
+  if (serviceType === 'GSE') {
+    if (protectionType === '1') {
+      range = appIdRange(GSEAPPID.P1.min, GSEAPPID.P1.max);
+    } else if (protectionType === '2') {
+      range = appIdRange(GSEAPPID.P2.min, GSEAPPID.P2.max);
+    } else {
+      range = appIdRange(GSEAPPID.N.min, GSEAPPID.N.max);
+    }
+  } else if (serviceType === 'SMV') {
+    range =
+      protectionType === '1'
+        ? appIdRange(SMVAPPID.P1.min, SMVAPPID.P1.max)
+        : appIdRange(SMVAPPID.P2.min, SMVAPPID.P2.max);
+  }
+
+  range = range.filter(appId => !ignoreAppIds.includes(appId));
+
+  return () => {
+    const uniqueAppId = range.find(appId => !appIds.has(appId));
+    if (uniqueAppId) appIds.add(uniqueAppId);
+    return uniqueAppId ?? '';
   };
 }
 
@@ -101,11 +179,11 @@ function getProtectionNumber(iedName: string): string {
 }
 
 function selectProtections(iedName: string, protection: string): boolean {
-  const protectionNumber = iedName.split('_')?.slice(-1)[0] ?? 'None';
-  if (protection.includes('1') && !isEven(parseInt(protectionNumber[1]))) {
+  const protectionNumber = iedName.slice(-1);
+  if (protection.includes('1') && !isEven(parseInt(protectionNumber))) {
     return true;
   }
-  if (protection.includes('2') && isEven(parseInt(protectionNumber[1]))) {
+  if (protection.includes('2') && isEven(parseInt(protectionNumber))) {
     return true;
   }
   return false;
@@ -147,6 +225,10 @@ export default class MulticastNamingPlugin extends LitElement {
     this.cbList?.addEventListener('selected', () => {
       this.selectedControlItems = this.cbList!.index;
     });
+  }
+
+  private onClosed(ae: CustomEvent<{ action: string } | null>): void {
+    if (!(ae.target instanceof Dialog && ae.detail?.action)) return;
   }
 
   renderFilterButtons(): TemplateResult {
@@ -259,31 +341,157 @@ export default class MulticastNamingPlugin extends LitElement {
   }
 
   updateCommElements(selectedCommElements: Element[]): void {
-    console.log(selectedCommElements);
+    // MAC Addresses
     const ignoreMACs = selectedCommElements.map(
       elem =>
-        elem.querySelector('Address > P[type="MAC-Address"]')!.textContent ?? ''
+        elem
+          .querySelector('Address > P[type="MAC-Address"]')!
+          .textContent?.toUpperCase() ?? ''
     );
+
     const nextMac: MacObject = {
       GSE: {
         '1': macAddressGenerator(this.doc, 'GSE', '1', ignoreMACs),
-        '2': macAddressGenerator(this.doc, 'GSE', '1', ignoreMACs),
+        '2': macAddressGenerator(this.doc, 'GSE', '2', ignoreMACs),
       },
       SMV: {
         '1': macAddressGenerator(this.doc, 'SMV', '1', ignoreMACs),
-        '2': macAddressGenerator(this.doc, 'SMV', '1', ignoreMACs),
+        '2': macAddressGenerator(this.doc, 'SMV', '2', ignoreMACs),
       },
     };
 
+    // APP IDs
+    const ignoreAppIds = selectedCommElements.map(
+      elem =>
+        elem
+          .querySelector('Address > P[type="APPID"]')!
+          .textContent?.toUpperCase() ?? ''
+    );
+
+    const nextAppId: AppObject = {
+      GSE: {
+        '1': appIdGenerator(this.doc, 'GSE', '1', ignoreAppIds),
+        '2': appIdGenerator(this.doc, 'GSE', '2', ignoreAppIds),
+        N: appIdGenerator(this.doc, 'GSE', 'N', ignoreAppIds),
+      },
+      SMV: {
+        '1': appIdGenerator(this.doc, 'SMV', '1', ignoreAppIds),
+        '2': appIdGenerator(this.doc, 'SMV', '2', ignoreAppIds),
+      },
+    };
+
+
+    const actions: SimpleAction[] = [];
+
     selectedCommElements.forEach(element => {
+      // for comparison to detect changes
+      const newElement = <Element>element.cloneNode(true);
+
       const protNum = getProtectionNumber(
         element.closest('ConnectedAP')!.getAttribute('iedName')!
       );
-      const usedMAC = nextMac[element.tagName][protNum]();
-      console.log(usedMAC);
-      element.querySelector(`Address > P[type="MAC-Address"]`)!.textContent =
-        usedMAC;
+      const newMac = nextMac[element.tagName][protNum]();
+      newElement.querySelector(`Address > P[type="MAC-Address"]`)!.textContent =
+        newMac;
+
+      if (element.tagName === 'GSE') {
+        // MinTime and MaxTime for GSE
+        const hasMinTime = element.querySelector('MinTime')?.textContent;
+        const hasMaxTime = element.querySelector('MaxTime')?.textContent;
+        if (
+          element.getAttribute('cbName')?.toUpperCase().includes('CTL') ||
+          element.getAttribute('cbName')?.toUpperCase().includes('TRIP')
+        ) {
+          if (hasMinTime) {
+            newElement.querySelector('MinTime')!.textContent = '4';
+          }
+        } else {
+          if (hasMinTime) {
+            newElement.querySelector('MinTime')!.textContent = '100';
+          }
+        }
+        if (hasMaxTime) {
+          newElement.querySelector('MaxTime')!.textContent = '1000';
+        }
+      }
+
+      // APPIDs
+      let protType: string = protNum;
+      // if it is not protection it is in a different range
+      if (
+        element.tagName === 'GSE' &&
+        !(
+          element.getAttribute('cbName')?.toUpperCase().includes('CTL') ||
+          element.getAttribute('cbName')?.toUpperCase().includes('TRIP')
+        )
+      ) {
+        protType = 'N';
+      }
+
+      const newAppId = nextAppId[element.tagName][protType]();
+      newElement.querySelector(`Address > P[type="APPID"]`)!.textContent =
+        newAppId;
+
+      // PRIORITY
+      if (element.tagName === 'GSE') {
+        newElement.querySelector(
+          `Address > P[type="VLAN-PRIORITY"]`
+        )!.textContent = '4';
+      } else if (element.tagName === 'SMV') {
+        newElement.querySelector(
+          `Address > P[type="VLAN-PRIORITY"]`
+        )!.textContent = '5';
+      }
+
+      // VLAN ID
+      if (element.tagName === 'GSE') {
+        newElement.querySelector(`Address > P[type="VLAN-ID"]`)!.textContent =
+          protNum === '2'
+            ? VLAN_GSE_P2.toString(16).toUpperCase()
+            : VLAN_GSE_P1.toString(16).toUpperCase();
+      } else if (element.tagName === 'SMV') {
+        newElement.querySelector(`Address > P[type="VLAN-ID"]`)!.textContent =
+          protNum === '2'
+            ? VLAN_SMV_P2.toString(16).toUpperCase()
+            : VLAN_SMV_P1.toString(16).toUpperCase();
+      }
+
+      if (!element.isEqualNode(newElement)) {
+        // add new elements
+        actions.push({
+          new: { parent: element.parentElement!, element: newElement },
+        });
+
+        // remove old elements
+        actions.push({
+          old: { parent: element.parentElement!, element: element },
+        });
+      }
+
+      /**
+       * TODO: NOT IMPLEMENTED YET - DO WE WANT THIS?
+       * GOOSE Id (SCD parameter appID)
+       * This should be the IED name, delimited with _ in the following manner e.g. XAT_232_P1, f
+       * followed by the GSEControl name with a $ delimiter, e.g. XAT_232_P1$Status_0
+       *
+       */
     });
+
+    const complexAction: ComplexAction = {
+      actions: actions,
+      title: `Multicast Naming Completed with ${actions.length} modifications made`,
+    };
+
+    if (complexAction.actions.length) {
+      this.dispatchEvent(newActionEvent(complexAction));
+    } else {
+      this.dispatchEvent(
+        newLogEvent({
+          kind: 'info',
+          title: 'Multicast Naming - No updates made',
+        })
+      );
+    }
   }
 
   renderButtons(): TemplateResult {
@@ -302,6 +510,7 @@ export default class MulticastNamingPlugin extends LitElement {
             (<Set<number>>this.selectedControlItems).values()
           ).map(index => this.commElements[index]);
           this.updateCommElements(selectedCommElements);
+          this.dialog.open = false;
         }}
       >
       </mwc-button>
@@ -317,6 +526,7 @@ export default class MulticastNamingPlugin extends LitElement {
     return html`<mwc-dialog
       class="multicast-content"
       heading="${translate('multicastNaming.heading')}"
+      @closed=${this.onClosed}
     >
       ${this.renderFilterButtons()} ${this.renderSelectionList()}
       ${this.renderButtons()}
