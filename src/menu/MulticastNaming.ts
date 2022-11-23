@@ -22,21 +22,11 @@ import '../filtered-list.js';
 import { gooseIcon, smvIcon } from '../icons/icons.js';
 import { compareNames, identity } from '../foundation.js';
 
-// type commType = Partial<Record<'GSE' | 'SMV', string>>
-
-type system = 'P1' | 'P2'
-
-type macAddrs = Partial<Record<system, () => string>>
-
-type commType = Partial<Record<'GSE'|'SMV', macAddrs>>
-
-type p1mac = Record<system, macAddrs>
-
-type MacObject = 
-  Record<commType,p1mac>
-;
-
-  // var stuff: Record<'P1'|'P2', () => string> = {};
+type MacObject = {
+  [key: string]: {
+    [key: string]: () => string;
+  };
+};
 
 const gseMAC = {
   P1: { min: 0x010ccd010000, max: 0x010ccd0100ff },
@@ -289,7 +279,7 @@ export default class MulticastNamingPlugin extends LitElement {
       const protNum = getProtectionNumber(
         element.closest('ConnectedAP')!.getAttribute('iedName')!
       );
-      const usedMAC = (nextMac)[<system>(element.tagName)][protNum]();
+      const usedMAC = nextMac[element.tagName][protNum]();
       console.log(usedMAC);
       element.querySelector(`Address > P[type="MAC-Address"]`)!.textContent =
         usedMAC;
