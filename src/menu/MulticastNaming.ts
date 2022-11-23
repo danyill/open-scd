@@ -22,6 +22,22 @@ import '../filtered-list.js';
 import { gooseIcon, smvIcon } from '../icons/icons.js';
 import { compareNames, identity } from '../foundation.js';
 
+// type commType = Partial<Record<'GSE' | 'SMV', string>>
+
+type system = 'P1' | 'P2'
+
+type macAddrs = Partial<Record<system, () => string>>
+
+type commType = Partial<Record<'GSE'|'SMV', macAddrs>>
+
+type p1mac = Record<system, macAddrs>
+
+type MacObject = 
+  Record<commType,p1mac>
+;
+
+  // var stuff: Record<'P1'|'P2', () => string> = {};
+
 const gseMAC = {
   P1: { min: 0x010ccd010000, max: 0x010ccd0100ff },
   P2: { min: 0x010ccd010100, max: 0x010ccd0101ff },
@@ -253,19 +269,19 @@ export default class MulticastNamingPlugin extends LitElement {
   }
 
   updateCommElements(selectedCommElements: Element[]): void {
-    console.log(selectedCommElements)
+    console.log(selectedCommElements);
     const ignoreMACs = selectedCommElements.map(
       elem =>
         elem.querySelector('Address > P[type="MAC-Address"]')!.textContent ?? ''
     );
-    const nextMac = {
+    const nextMac: MacObject = {
       GSE: {
-        1: macAddressGenerator(this.doc, 'GSE', '1', ignoreMACs),
-        2: macAddressGenerator(this.doc, 'GSE', '1', ignoreMACs),
+        '1': macAddressGenerator(this.doc, 'GSE', '1', ignoreMACs),
+        '2': macAddressGenerator(this.doc, 'GSE', '1', ignoreMACs),
       },
       SMV: {
-        1: macAddressGenerator(this.doc, 'SMV', '1', ignoreMACs),
-        2: macAddressGenerator(this.doc, 'SMV', '1', ignoreMACs),
+        '1': macAddressGenerator(this.doc, 'SMV', '1', ignoreMACs),
+        '2': macAddressGenerator(this.doc, 'SMV', '1', ignoreMACs),
       },
     };
 
@@ -273,7 +289,7 @@ export default class MulticastNamingPlugin extends LitElement {
       const protNum = getProtectionNumber(
         element.closest('ConnectedAP')!.getAttribute('iedName')!
       );
-      const usedMAC = nextMac[element.tagName][protNum]();
+      const usedMAC = (nextMac)[<system>(element.tagName)][protNum]();
       console.log(usedMAC);
       element.querySelector(`Address > P[type="MAC-Address"]`)!.textContent =
         usedMAC;
