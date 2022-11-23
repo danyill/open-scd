@@ -154,7 +154,7 @@ export const officialPlugins = [
     default: true,
     kind: 'menu',
     requireDoc: true,
-    position: 'bottom',
+    position: 'middle',
   },
   {
     name: 'Create Virtual IED',
