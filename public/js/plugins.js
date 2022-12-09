@@ -148,6 +148,15 @@ export const officialPlugins = [
     position: 'middle',
   },
   {
+    name: 'Import Templates',
+    src: '/src/menu/ImportTemplates.js',
+    icon: 'drive_folder_upload',
+    default: true,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'middle',
+  },  
+  {
     name: 'Create Virtual IED',
     src: '/src/menu/VirtualTemplateIED.js',
     icon: 'developer_board',

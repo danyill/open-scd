@@ -658,6 +658,17 @@ export const en = {
       missingied: 'No IED element in the file',
       nouniqueied: 'IED element {{ name }} already in the file',
     },
+  },  
+  importTemplates: {
+    title: 'Import IEDs',
+    log: {
+      successful: 'IED {{ name }} loaded',
+      parsererror: 'Parser error',
+      loaderror: 'Could not load file',
+      importerror: 'Could not import IED',
+      missingied: 'No Template IED element in the file',
+      nouniqueied: 'IED element {{ name }} already in the file',
+    },
   },
   communication: {
     name: 'Network Configuration',
