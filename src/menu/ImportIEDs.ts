@@ -30,7 +30,7 @@ import {
 
 function uniqueTemplateIedName(doc: XMLDocument, ied: Element): string {
   const [manufacturer, type] = ['manufacturer', 'type'].map(attr =>
-    ied.getAttribute(attr)
+    ied.getAttribute(attr)?.replace(/[^A-Za-z0-9_]/,'')
   );
   const nameCore =
     manufacturer || type
@@ -40,11 +40,11 @@ function uniqueTemplateIedName(doc: XMLDocument, ied: Element): string {
   const siblingNames = Array.from(doc.querySelectorAll('IED'))
     .filter(isPublic)
     .map(child => child.getAttribute('name') ?? child.tagName);
-  if (!siblingNames.length) return nameCore + '_001';
+  if (!siblingNames.length) return nameCore + '_01';
 
   let newName = '';
   for (let i = 0; i < siblingNames.length + 1; i++) {
-    const newDigit = (i + 1).toString().padStart(3, '0');
+    const newDigit = (i + 1).toString().padStart(2, '0');
     newName = nameCore + '_' + newDigit;
 
     if (!siblingNames.includes(newName)) return newName;
@@ -538,7 +538,7 @@ export default class ImportingIedPlugin extends LitElement {
   }
 
   protected renderIedSelection(): TemplateResult {
-    return html`<mwc-dialog>
+    return html`<mwc-dialog heading="${translate('import.title')}">
       <filtered-list hasSlot multi>
         ${Array.from(this.importDoc?.querySelectorAll(':root > IED') ?? []).map(
           ied =>
@@ -546,7 +546,6 @@ export default class ImportingIedPlugin extends LitElement {
               >${ied.getAttribute('name')}</mwc-check-list-item
             >`
         )}
-        <mwc-icon-button slot="meta" icon="edit"></mwc-icon-button>
       </filtered-list>
       <mwc-button
         dialogAction="close"

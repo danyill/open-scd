@@ -16,6 +16,7 @@ import '@material/mwc-button';
 import { Dialog } from '@material/mwc-dialog';
 import { List } from '@material/mwc-list';
 import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
+import { TextField } from '@material/mwc-textfield';
 
 import '../filtered-list.js';
 import {
@@ -28,24 +29,25 @@ import {
   selector,
   SimpleAction,
 } from '../foundation.js';
+import { FilteredList } from '../filtered-list.js';
 
 function uniqueTemplateIedName(doc: XMLDocument, ied: Element): string {
   const [manufacturer, type] = ['manufacturer', 'type'].map(attr =>
-    ied.getAttribute(attr)
+    ied.getAttribute(attr)?.replace(/[^A-Za-z0-9_]/,'')
   );
   const nameCore =
     manufacturer || type
-      ? `${manufacturer ?? ''}${type ? '_' + type : ''}`
+      ? `T_${manufacturer ?? ''}${type ? '_' + type : ''}`
       : 'TEMPLATE_IED';
 
   const siblingNames = Array.from(doc.querySelectorAll('IED'))
     .filter(isPublic)
     .map(child => child.getAttribute('name') ?? child.tagName);
-  if (!siblingNames.length) return nameCore + '_001';
+  if (!siblingNames.length) return nameCore + '_01';
 
   let newName = '';
   for (let i = 0; i < siblingNames.length + 1; i++) {
-    const newDigit = (i + 1).toString().padStart(3, '0');
+    const newDigit = (i + 1).toString().padStart(2, '0');
     newName = nameCore + '_' + newDigit;
 
     if (!siblingNames.includes(newName)) return newName;
@@ -375,6 +377,10 @@ function resetSelection(dialog: Dialog): void {
   ).forEach(item => (item.selected = false));
 }
 
+function validateOrReplaceInput(tf: TextField): void {
+  if (!(parseInt(tf.value) >= 0 && parseInt(tf.value) <= 99)) tf.value = '1';
+}
+
 export default class ImportTemplateIedPlugin extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
@@ -385,10 +391,18 @@ export default class ImportTemplateIedPlugin extends LitElement {
   @query('#importTemplateIED-plugin-input') pluginFileUI!: HTMLInputElement;
   @query('mwc-dialog') dialog!: Dialog;
 
+  @query('filtered-list') filteredList!: FilteredList;
+
   @property({ attribute: false })
   inputSelected = false;
 
+  @property({ attribute: false })
+  importIedCount: number | null = null;
+
   async run(): Promise<void> {
+    this.importDocs = [];
+    this.inputSelected = false;
+    this.importIedCount = null;
     this.pluginFileUI.click();
   }
 
@@ -397,31 +411,7 @@ export default class ImportTemplateIedPlugin extends LitElement {
       .updateComplete;
   }
 
-  private importTemplateIED(ied: Element): void {
-    if (ied.getAttribute('name') === 'TEMPLATE') {
-      const newIedName = uniqueTemplateIedName(this.doc, ied);
-
-      ied.setAttribute('name', newIedName);
-
-      Array.from(
-        ied.ownerDocument.querySelectorAll(
-          ':root > Communication > SubNetwork > ConnectedAP[iedName="TEMPLATE"]'
-        )
-      ).forEach(connectedAp => connectedAp.setAttribute('iedName', newIedName));
-    }
-
-    if (!isIedNameUnique(ied, this.doc)) {
-      this.dispatchEvent(
-        newLogEvent({
-          kind: 'error',
-          title: get('importTemplate.log.nouniqueied', {
-            name: ied.getAttribute('name')!,
-          }),
-        })
-      );
-      return;
-    }
-
+  private async importTemplateIED(ied: Element, importQuantity: number): Promise<void> {
     // This doesn't provide redo/undo capability as it is not using the Editing
     // action API. To use it would require us to cache the full SCL file in
     // OpenSCD as it is now which could use significant memory.
@@ -431,63 +421,99 @@ export default class ImportTemplateIedPlugin extends LitElement {
       ied.ownerDocument.documentElement
     );
 
-    const dataTypeTemplateActions = addDataTypeTemplates(ied, this.doc);
-    const communicationActions = addCommunicationElements(ied, this.doc);
-    const actions = communicationActions.concat(dataTypeTemplateActions);
-    actions.push({
-      new: {
-        parent: this.doc!.querySelector(':root')!,
-        element: ied,
-      },
-    });
-
+    let actions = addDataTypeTemplates(ied, this.doc);
     this.dispatchEvent(
       newActionEvent({
-        title: get('editing.import', { name: ied.getAttribute('name')! }),
+        title: get('importTemplates.log.import', {
+          quantity: importQuantity,
+          type: ied.getAttribute('type') ?? 'Unknown',
+        }),
         actions,
       })
     );
+    await this.docUpdate();
+
+    actions = []
+
+    for (let iedCount = 0; iedCount < importQuantity; iedCount++) {
+      const iedCopy = <Element>ied.cloneNode(true);
+      const newIedName = uniqueTemplateIedName(this.doc, iedCopy);
+      iedCopy.setAttribute('name', newIedName);
+
+      Array.from(
+        iedCopy.ownerDocument.querySelectorAll(
+          ':root > Communication > SubNetwork > ConnectedAP[iedName="TEMPLATE"]'
+        )
+      ).forEach(connectedAp => connectedAp.setAttribute('iedName', newIedName));
+
+      actions = actions.concat(addCommunicationElements(iedCopy, this.doc));
+      this.dispatchEvent(
+        newActionEvent({
+          title: get('importTemplates.log.import', {
+            quantity: importQuantity,
+            type: ied.getAttribute('type') ?? 'Unknown',
+          }),
+          actions,
+        })
+      );
+      await this.docUpdate();
+      actions = []
+
+      actions.push({
+        new: {
+          parent: this.doc!.querySelector(':root')!,
+          element: iedCopy,
+        },
+      });
+
+      this.dispatchEvent(
+        newActionEvent({
+          title: get('importTemplates.log.import', {
+            quantity: importQuantity,
+            type: ied.getAttribute('type') ?? 'Unknown',
+          }),
+          actions,
+        })
+      );
+      await this.docUpdate();
+    }
+    
+
   }
 
-  private async importTemplateIEDs(): Promise<void> {
-    const selectedItems = <ListItemBase[]>(
-      (<List>this.dialog.querySelector('filtered-list')).selected
-    );
+  private importTemplateIEDs(): void {
+    const itemImportCountArray = (<List>(
+      this.dialog.querySelector('filtered-list')
+    )).items.map(item => parseInt(item.querySelector('mwc-textfield')!.value));
 
-    // const ieds = selectedItems
-    //   .map(item => {
-    //     return this.importDoc!.querySelector(selector('IED', item.value));
-    //   })
-    //   .filter(ied => ied) as Element[];
+    this.importDocs?.forEach(async (importDoc, importQuantity) => {
+      const templateIed = importDoc.querySelector(selector('IED', 'TEMPLATE'))!;
+      this.importTemplateIED(templateIed, itemImportCountArray[importQuantity]);
+      await this.docUpdate();
+    });
 
-    //   resetSelection(this.dialog);
-    //   this.dialog.close();
-
-    //   for (const ied of ieds) {
-    //     this.importTemplateIED(ied);
-    //     await this.docUpdate();
-    //   }
+    this.dialog.close();
   }
 
-  public prepareImport(templateDoc: Document): void {
+  public isImportValid(templateDoc: Document, filename: string): boolean {
     if (!templateDoc) {
       this.dispatchEvent(
         newLogEvent({
           kind: 'error',
-          title: get('importTemplate.log.loaderror'),
+          title: get('importTemplates.log.loaderror', { name: filename }),
         })
       );
-      return;
+      return false;
     }
 
     if (templateDoc.querySelector('parsererror')) {
       this.dispatchEvent(
         newLogEvent({
           kind: 'error',
-          title: get('importTemplate.log.parsererror'),
+          title: get('importTemplates.log.parsererror', { name: filename }),
         })
       );
-      return;
+      return false;
     }
 
     const ied = templateDoc.querySelector(':root > IED[name="TEMPLATE"]');
@@ -495,11 +521,12 @@ export default class ImportTemplateIedPlugin extends LitElement {
       this.dispatchEvent(
         newLogEvent({
           kind: 'error',
-          title: get('importTemplate.log.missingied'),
+          title: get('importTemplates.log.missingied', { name: filename }),
         })
       );
-      return;
+      return false;
     }
+    return true;
   }
 
   /** Loads the file `event.target.files[0]` into [[`src`]] as a `blob:...`. */
@@ -513,9 +540,9 @@ export default class ImportTemplateIedPlugin extends LitElement {
         await file.text(),
         'application/xml'
       );
-      this.importDocs!.push(templateDoc);
 
-      return this.prepareImport(templateDoc);
+      const validTemplate = this.isImportValid(templateDoc, file.name);
+      if (validTemplate) this.importDocs!.push(templateDoc);
     });
 
     new Promise<void>((resolve, reject) =>
@@ -523,9 +550,15 @@ export default class ImportTemplateIedPlugin extends LitElement {
         () => resolve(),
         () => reject()
       )
-    ).then(() => {
+    ).then(async () => {
       this.inputSelected = false;
-      this.render();
+      await this.render();
+      this.filteredList.querySelectorAll('mwc-textfield').forEach(textField =>
+        textField.addEventListener('input', () => {
+          validateOrReplaceInput(textField);
+          this.getTotalIeds();
+        })
+      );
       this.dialog.show();
     });
   }
@@ -558,51 +591,71 @@ export default class ImportTemplateIedPlugin extends LitElement {
       'originalSclRelease',
     ].map(attr => templateIed?.getAttribute(attr));
 
-    const firstLine = [manufacturer, type].filter(val => val !== null).join(' - ');
+    const firstLine = [manufacturer, type]
+      .filter(val => val !== null)
+      .join(' - ');
 
-    const schemaInformation = [originalSclVersion, originalSclRevision, originalSclRelease]
+    const schemaInformation = [
+      originalSclVersion,
+      originalSclRevision,
+      originalSclRelease,
+    ]
       .filter(val => val !== null)
       .join('');
-      
+
     const secondLine = [desc, configVersion, schemaInformation]
       .filter(val => val !== null)
       .join(' - ');
 
-
-    return html`<mwc-list-item twoline value="${firstLine} ${secondLine}"
-      >${firstLine}
-      <span class="secondLine" slot="secondary">${secondLine}</span>
+    return html`<mwc-list-item twoline value="${firstLine}" graphic="icon">
+      <span class="first-line">${firstLine}</span>
+      <span class="second-line" slot="secondary">${secondLine}</span>
       <mwc-textfield
-        required
-        class="templateCount"
-        placeholder="1"
+        class="template-count"
         min="0"
+        max="99"
+        maxLength="2"
         type="number"
         value="1"
-        size="3"
-        maxLength="3"
+        required
       ></mwc-textfield>
+      <mwc-icon slot="graphic">developer_board</mwc-icon>
     </mwc-list-item>`;
   }
 
+  protected getTotalIeds(): void {
+    if (!this.dialog) return;
+    let importIedCount = 0;
+    const items = <ListItemBase[]>(
+      (<List>this.dialog?.querySelector('filtered-list')).items
+    );
+    items.forEach(
+      item =>
+        (importIedCount += parseInt(item.querySelector('mwc-textfield')!.value))
+    );
+    this.importIedCount = importIedCount;
+  }
+
   protected renderIedSelection(): TemplateResult {
-    return html`<mwc-dialog>
-      <filtered-list>
+    const iedImportCount = this.importIedCount ?? this.importDocs?.length ?? 0;
+    return html`<mwc-dialog heading="${translate('importTemplates.title')}">
+      <filtered-list multi>
         ${this.importDocs!.map(doc => {
-          this.renderIcdListItem(doc);
+          return this.renderIcdListItem(doc);
         })}
       </filtered-list>
       <mwc-button
+        class="close-button"
         dialogAction="close"
         label="${translate('close')}"
         slot="secondaryAction"
-        style="--mdc-theme-primary: var(--mdc-theme-error)"
       ></mwc-button>
       <mwc-button
-        label="IEDs"
+        label="IEDs (${iedImportCount})"
         slot="primaryAction"
         icon="add"
         @click=${this.importTemplateIEDs}
+        ?disabled=${iedImportCount === 0}
       ></mwc-button>
     </mwc-dialog>`;
   }
@@ -620,20 +673,38 @@ export default class ImportTemplateIedPlugin extends LitElement {
       opacity: 0;
     }
 
+    .close-button {
+      --mdc-theme-primary: var(--mdc-theme-error);
+    }
+
+    .first-line,
+    .second-line {
+      display: inline-flex;
+      overflow: hidden;
+      text-overflow: clip;
+      width: 250px;
+    }
+
+    .template-count {
+      display: inline-flex;
+      padding-left: 5px;
+    }
+
     mwc-list-item {
       display: flex;
     }
 
-    mwc-textfield {
-      align-items: center;
-      padding-left: 150px;
-      width: 200px;
-      overflow: visible;
+    mwc-list-item.hidden {
+      display: none;
     }
 
-    .secondLine {
-      max-width: 100 px;
-      overflow: visible;
+    @media (max-width: 499px) {
+      .first-line,
+      .second-line {
+        width: 200px;
+        overflow: hidden;
+        text-overflow: clip;
+      }
     }
   `;
 }

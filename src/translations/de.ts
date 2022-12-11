@@ -661,14 +661,15 @@ export const de: Translations = {
     },
   },
   importTemplates: {
-    title: 'IEDs importieren',
+    title: 'Vorlagen-IEDs importieren',
     log: {
       successful: 'IED {{name}} geladen',
-      parsererror: 'Parser Fehler',
-      loaderror: 'Datei kann nicht geladen werden',
-      importerror: 'IED Element kann nicht importiert werden',
-      missingied: 'Kein IED-Element-Vorlage in der Datei',
+      parsererror: 'Parser Fehler in {{ name }}',
+      loaderror: 'Datei kann nicht geladen werden in {{ name }}',
+      importerror: 'IED Element {{ name }} kann nicht importiert werden',
+      missingied: 'Kein IED-Element-Vorlage in der Datei {{ name }}',
       nouniqueied: 'IED Element {{ name }} bereits geladen',
+      import: 'Imported {{ quantity }} of {{ type }}'
     },
   },
   communication: {

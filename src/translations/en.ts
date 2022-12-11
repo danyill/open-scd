@@ -660,14 +660,15 @@ export const en = {
     },
   },  
   importTemplates: {
-    title: 'Import IEDs',
+    title: 'Import Template IEDs',
     log: {
       successful: 'IED {{ name }} loaded',
-      parsererror: 'Parser error',
-      loaderror: 'Could not load file',
-      importerror: 'Could not import IED',
-      missingied: 'No Template IED element in the file',
+      parsererror: 'Parser error in {{ name }}',
+      loaderror: 'Could not load file in {{ name }}',
+      importerror: 'Could not import IED {{ name }}',
+      missingied: 'No Template IED element in the file {{ name }}',
       nouniqueied: 'IED element {{ name }} already in the file',
+      import: 'Imported {{ quantity }} of {{ type }}',
     },
   },
   communication: {
