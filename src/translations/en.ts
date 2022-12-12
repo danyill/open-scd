@@ -668,7 +668,7 @@ export const en = {
       importerror: 'Could not import IED {{ name }}',
       missingied: 'No Template IED element in the file {{ name }}',
       nouniqueied: 'IED element {{ name }} already in the file',
-      import: 'Imported {{ quantity }} of {{ type }}',
+      import: 'Imported {{ name }} of type {{ type }}',
     },
   },
   communication: {

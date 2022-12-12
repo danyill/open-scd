@@ -28,16 +28,17 @@ import {
   newPendingStateEvent,
   selector,
   SimpleAction,
+  ComplexAction,
 } from '../foundation.js';
 import { FilteredList } from '../filtered-list.js';
 
 function uniqueTemplateIedName(doc: XMLDocument, ied: Element): string {
   const [manufacturer, type] = ['manufacturer', 'type'].map(attr =>
-    ied.getAttribute(attr)?.replace(/[^A-Za-z0-9_]/,'')
+    ied.getAttribute(attr)?.replace(/[^A-Za-z0-9_]/, '')
   );
   const nameCore =
     manufacturer || type
-      ? `T_${manufacturer ?? ''}${type ? '_' + type : ''}`
+      ? `${manufacturer ?? ''}${type ? '_' + type : ''}`
       : 'TEMPLATE_IED';
 
   const siblingNames = Array.from(doc.querySelectorAll('IED'))
@@ -57,7 +58,7 @@ function uniqueTemplateIedName(doc: XMLDocument, ied: Element): string {
 }
 
 /**
- * Transfer namespaces from one element to another
+ * Transfer namespace definitions from one element to another
  * @param destElement - Element to transfer namespaces to
  * @param sourceElement  - Element to transfer namespaces from
  */
@@ -82,6 +83,15 @@ function getSubNetwork(elements: Element[], element: Element): Element {
   return existElement ? existElement : <Element>element.cloneNode(false);
 }
 
+/**
+ * Creates and array of actions to transfer an SCL Communication section from an SCL document containing
+ * ied to doc, creating an SCL Communication element if required.
+ * Adds elements to existing Subnetworks where possible and creates the Subnetworks when necessary. Then
+ * transfers ConnectedAP elements.
+ * @param ied - SCL IED containing ConnectedAPs
+ * @param doc - SCL document to receive Communication elements
+ * @returns Array of actions to transfer the SCL section
+ */
 function addCommunicationElements(
   ied: Element,
   doc: XMLDocument
@@ -146,6 +156,13 @@ function addCommunicationElements(
   return actions;
 }
 
+/**
+ * Recursively checks from children to parents that an SCL Datatype Template called type
+ * is used within an ied. When the first one is found returns true.
+ * @param type - An SCL DataTypeTemplate.
+ * @param ied - An SCL IED element.
+ * @returns true if there is a connection, otherwise false.
+ */
 function hasConnectionToIed(type: Element, ied: Element): boolean {
   const data: Element = type.parentElement!;
   const id = type.getAttribute('id');
@@ -178,6 +195,14 @@ function hasConnectionToIed(type: Element, ied: Element): boolean {
     .some(anyln => anyln.getAttribute('lnType') === id);
 }
 
+/**
+ * Adds new EnumType used by ied to parent. Parent would typically be the DataTypeTemplate SCL section.
+ * NOTE: Updates the EnumType id within the ied if it already exists in the parent.
+ * @param ied - SCL IED
+ * @param enumType - SCL EnumType (typically associated with ied)
+ * @param parent - element where changes are required (e.g. DataTypeTemplates)
+ * @returns a SimpleAction representing the change.
+ */
 function addEnumType(
   ied: Element,
   enumType: Element,
@@ -213,6 +238,14 @@ function addEnumType(
   };
 }
 
+/**
+ * Adds new DAType used by ied to parent. Parent would typically be the DataTypeTemplate SCL section.
+ * NOTE: Updates the DAType id within the ied if it already exists in the parent.
+ * @param ied - SCL IED
+ * @param dAType - SCL DAType (typically associated with ied)
+ * @param parent - element where changes are required (e.g. DataTypeTemplates)
+ * @returns a SimpleAction representing the change.
+ */
 function addDAType(
   ied: Element,
   daType: Element,
@@ -248,6 +281,14 @@ function addDAType(
   };
 }
 
+/**
+ * Adds new DOType used by ied to parent. Parent would typically be the DataTypeTemplate SCL section.
+ * NOTE: Updates the DOType id within the ied if it already exists in the parent.
+ * @param ied - SCL IED
+ * @param doType - SCL DOType (typically associated with ied)
+ * @param parent - element where changes are required (e.g. DataTypeTemplates)
+ * @returns a SimpleAction representing the change.
+ */
 function addDOType(
   ied: Element,
   doType: Element,
@@ -283,6 +324,14 @@ function addDOType(
   };
 }
 
+/**
+ * Adds new LNodeType used by ied to parent. Parent would typically be the DataTypeTemplate SCL section.
+ * NOTE: Updates the lNodeType id within the ied if it already exists in the parent.
+ * @param ied - SCL IED
+ * @param lNodeType - SCL LNodeType (typically associated with ied)
+ * @param parent - element where changes are required (e.g. DataTypeTemplates)
+ * @returns a SimpleAction representing the change.
+ */
 function addLNodeType(
   ied: Element,
   lNodeType: Element,
@@ -317,6 +366,14 @@ function addLNodeType(
   };
 }
 
+/**
+ * Get datatype templates used by ied to doc and return actions array for changes required.
+ * Will create an SCL or DataTypeTemplates section if not present.
+ * NOTE: Will adjust the ied type names if there is a conflict in type ids with the existing doc.
+ * @param ied - SCL IED beingwhich uses datatype templates
+ * @param doc - project where SCL datatype templates
+ * @returns an array of actions consisting of LNodeType, DOType, DAType and EnumTypes
+ */
 function addDataTypeTemplates(ied: Element, doc: XMLDocument): SimpleAction[] {
   const actions: (SimpleAction | undefined)[] = [];
 
@@ -360,25 +417,33 @@ function addDataTypeTemplates(ied: Element, doc: XMLDocument): SimpleAction[] {
   return <SimpleAction[]>actions.filter(item => item !== undefined);
 }
 
-function isIedNameUnique(ied: Element, doc: Document): boolean {
-  const existingIedNames = Array.from(doc.querySelectorAll(':root > IED')).map(
-    ied => ied.getAttribute('name')!
-  );
-  const importedIedName = ied.getAttribute('name')!;
+// function isIedNameUnique(ied: Element, doc: Document): boolean {
+//   const existingIedNames = Array.from(doc.querySelectorAll(':root > IED')).map(
+//     ied => ied.getAttribute('name')!
+//   );
+//   const importedIedName = ied.getAttribute('name')!;
 
-  if (existingIedNames.includes(importedIedName)) return false;
+//   if (existingIedNames.includes(importedIedName)) return false;
 
-  return true;
-}
+//   return true;
+// }
 
-function resetSelection(dialog: Dialog): void {
-  (
-    (dialog.querySelector('filtered-list') as List).selected as ListItemBase[]
-  ).forEach(item => (item.selected = false));
-}
+// function resetSelection(dialog: Dialog): void {
+//   (
+//     (dialog.querySelector('filtered-list') as List).selected as ListItemBase[]
+//   ).forEach(item => (item.selected = false));
+// }
 
 function validateOrReplaceInput(tf: TextField): void {
   if (!(parseInt(tf.value) >= 0 && parseInt(tf.value) <= 99)) tf.value = '1';
+}
+
+function sleep(milliseconds: number) {
+  const date = Date.now();
+  let currentDate = null;
+  do {
+    currentDate = Date.now();
+  } while (currentDate - date < milliseconds);
 }
 
 export default class ImportTemplateIedPlugin extends LitElement {
@@ -411,53 +476,37 @@ export default class ImportTemplateIedPlugin extends LitElement {
       .updateComplete;
   }
 
-  private async importTemplateIED(ied: Element, importQuantity: number): Promise<void> {
+  private async importTemplateIED(
+    ied: Element,
+    importQuantity: number
+  ): Promise<void> {
     // This doesn't provide redo/undo capability as it is not using the Editing
     // action API. To use it would require us to cache the full SCL file in
     // OpenSCD as it is now which could use significant memory.
     // TODO: In open-scd core update this to allow including in undo/redo.
+
+    window.addEventListener('validate', event => {
+      console.log(event);
+    });
+
     updateNamespaces(
       this.doc.documentElement,
       ied.ownerDocument.documentElement
     );
-
-    let actions = addDataTypeTemplates(ied, this.doc);
-    this.dispatchEvent(
-      newActionEvent({
-        title: get('importTemplates.log.import', {
-          quantity: importQuantity,
-          type: ied.getAttribute('type') ?? 'Unknown',
-        }),
-        actions,
-      })
-    );
-    await this.docUpdate();
-
-    actions = []
 
     for (let iedCount = 0; iedCount < importQuantity; iedCount++) {
       const iedCopy = <Element>ied.cloneNode(true);
       const newIedName = uniqueTemplateIedName(this.doc, iedCopy);
       iedCopy.setAttribute('name', newIedName);
 
+      let actions: SimpleAction[] = addDataTypeTemplates(iedCopy, this.doc);
+
       Array.from(
         iedCopy.ownerDocument.querySelectorAll(
           ':root > Communication > SubNetwork > ConnectedAP[iedName="TEMPLATE"]'
         )
       ).forEach(connectedAp => connectedAp.setAttribute('iedName', newIedName));
-
       actions = actions.concat(addCommunicationElements(iedCopy, this.doc));
-      this.dispatchEvent(
-        newActionEvent({
-          title: get('importTemplates.log.import', {
-            quantity: importQuantity,
-            type: ied.getAttribute('type') ?? 'Unknown',
-          }),
-          actions,
-        })
-      );
-      await this.docUpdate();
-      actions = []
 
       actions.push({
         new: {
@@ -466,31 +515,32 @@ export default class ImportTemplateIedPlugin extends LitElement {
         },
       });
 
-      this.dispatchEvent(
-        newActionEvent({
-          title: get('importTemplates.log.import', {
-            quantity: importQuantity,
-            type: ied.getAttribute('type') ?? 'Unknown',
-          }),
-          actions,
-        })
-      );
-      await this.docUpdate();
-    }
-    
+      const complexAction: ComplexAction = {
+        actions: actions,
+        title: get('importTemplates.log.import', {
+          name: newIedName,
+          type: ied.getAttribute('type') ?? 'Unknown',
+        }),
+      };
 
+      sleep(5000)
+      this.dispatchEvent(newActionEvent(complexAction));
+      await this.docUpdate();
+      sleep(5000)
+    }
   }
 
-  private importTemplateIEDs(): void {
+  private async importTemplateIEDs(): Promise<void> {
     const itemImportCountArray = (<List>(
       this.dialog.querySelector('filtered-list')
     )).items.map(item => parseInt(item.querySelector('mwc-textfield')!.value));
 
-    this.importDocs?.forEach(async (importDoc, importQuantity) => {
+    for (const [importQuantity, importDoc] of this.importDocs!.entries()) {
       const templateIed = importDoc.querySelector(selector('IED', 'TEMPLATE'))!;
-      this.importTemplateIED(templateIed, itemImportCountArray[importQuantity]);
-      await this.docUpdate();
-    });
+      const newIedCount = itemImportCountArray[importQuantity];
+      if (newIedCount !== 0)
+        await this.importTemplateIED(templateIed, newIedCount);
+    }
 
     this.dialog.close();
   }
@@ -556,7 +606,7 @@ export default class ImportTemplateIedPlugin extends LitElement {
       this.filteredList.querySelectorAll('mwc-textfield').forEach(textField =>
         textField.addEventListener('input', () => {
           validateOrReplaceInput(textField);
-          this.getTotalIeds();
+          this.getSumOfIedsToCreate();
         })
       );
       this.dialog.show();
@@ -623,7 +673,7 @@ export default class ImportTemplateIedPlugin extends LitElement {
     </mwc-list-item>`;
   }
 
-  protected getTotalIeds(): void {
+  protected getSumOfIedsToCreate(): void {
     if (!this.dialog) return;
     let importIedCount = 0;
     const items = <ListItemBase[]>(
