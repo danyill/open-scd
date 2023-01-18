@@ -43,6 +43,7 @@ In order of priority and somewhat tailored to what seems achievable within our d
    - Automation of configuration for GOOSE and SV traffic based on known configurations of merging units, protection relays. We anticipate doing this by transforming the SLD into a graph where the nodes represent terminals and the edges represent `ConductingEquipment` etc and then carrying out a terminating depth-first search to identify e.g. CTs and CBs on a bus and provide subscriptions between e.g. bus protection, transformer protection and merging units. To achieve this we need:
      - to be able to instantiate project icd files against LNodes within the substation section.
      - to have an API for GOOSE/SV publishing/subscriptions and the ability to instantiate/modify LGOS and LSVS LNs.
+   - Generate logic used for interlocking (Transpower uses a somewhat novel "topology-based" interlocking based off an SSD file which generate IEC61131 logic).
 
 1. SLD Editor
 
