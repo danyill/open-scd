@@ -71,7 +71,10 @@ In order of priority and somewhat tailored to what seems achievable within our d
 
    Some initial prototyping and ideating done by Daniel/Christian (see also: [#896](https://github.com/openscd/open-scd/issues/896), [#669](https://github.com/openscd/open-scd/issues/669), [#892](https://github.com/openscd/open-scd/issues/892), [#349](https://github.com/openscd/open-scd/issues/349))
 
-1. Complete the publisher plugin - in particular, provide the ability to add FCDOs to RCBs to allow MMS SCADA map augmentation ([#1092](https://github.com/openscd/open-scd/issues/1092))
+1. Complete the publisher plugin 
+
+   - Provide the ability to add FCDOs to RCBs to allow MMS SCADA map augmentation ([#1092](https://github.com/openscd/open-scd/issues/1092))
+   - Provide subscriber oriented view for later-binding GOOSE/SMV ([#1025](https://github.com/openscd/open-scd/issues/1025))
 
 1. Complete the subscription editors:
 
