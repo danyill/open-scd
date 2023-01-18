@@ -26,9 +26,9 @@ Feature ideas for the OpenSCD project. They are currently not prioritized.
 - Engineering Workflow Editor
 - Graphical network diagram view for Communication section editor
 
-## Transpower Input
+## Transpower Input (18/01/2023)
 
-**_NOTE: Transpower has at this time made no commitment on whether we will or won't use OpenSCD for these tasks and this doesn't represent an any such undertaking but it is provided as an exploration of requirements and use cases_**
+**_NOTE: Transpower has at this time made no decision on whether we will or won't use OpenSCD for these tasks and this doesn't represent an any such undertaking but it is provided as an exploration of requirements and use cases_**
 
 In order of priority and somewhat tailored to what seems achievable within our digital substation project's time constraints and expectations:
 
@@ -77,3 +77,5 @@ In order of priority and somewhat tailored to what seems achievable within our d
    - Allow reassignment or provide API to allow reassignment of LGOS and LSVS ([#1038](https://github.com/openscd/open-scd/issues/1038))
    - Support updating of configuration revision (low-priority, see [#562](https://github.com/openscd/open-scd/issues/562))
    - (If possible) allow single click three-phase connections (low-priority, see [#1088](https://github.com/openscd/open-scd/issues/1088))
+
+1. Export IID file ([#361](https://github.com/openscd/open-scd/issues/361)) - this is useful as some software (GE Enervista) doesn't allow import of configuration parameters from an SCD file.
