@@ -58,6 +58,7 @@ In order of priority and somewhat tailored to what seems achievable within our d
 1. Substation Editor. The Substation editor provides much of the desired capability but does not yet allow:
 
    - Connection of a an IED to a set of LNodes. (see [#1128](https://github.com/openscd/open-scd/issues/1128))
+   - Ability to model the NeutralPoint of a transformer. Transpower needs to be able to assign CTRs to the neutral point of the transformer so we need to be able to model this ([#796](https://github.com/openscd/open-scd/issues/796))
 
 1. General SCL diffing/merging tool -- this is quite a significant piece of work but is important to allow:
 
