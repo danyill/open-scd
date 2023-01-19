@@ -34,7 +34,7 @@ One difference in Transpower's approach from what European utilities do, is that
 These templates are then used by consultants and technicians who carry out site-specific designs based on the standard/typical.
 So Transpower's approach in the digital substation is heavily focussed on simple, consistent application of templates and not so much on specification of functionality.
 
-In order of priority and somewhat tailored to what seems achievable within our digital substation project's time constraints and expectations:
+In order of priority and somewhat tailored to what might be achievable within our digital substation project's time constraints (templates/standards built by mid-2024) and expectations:
 
 1. Finish transition to OpenSCD core -- as above. We expect to have a range of plugins to simplify, automate and ensure repeatable configurations and having these as separately versioned npm modules will improve visibility, maintenance and modularity.
 
@@ -88,10 +88,10 @@ In order of priority and somewhat tailored to what seems achievable within our d
 1. Complete the subscription editors:
 
    - Allow DO based GOOSE subscriptions (low-priority, see [#1104](https://github.com/openscd/open-scd/issues/1104))
-   - Allow reassignment or provide API to allow reassignment of LGOS and LSVS ([#1038](https://github.com/openscd/open-scd/issues/1038))
+   - Allow reassignment or provide API to allow reassignment of LGOS and LSVS ([#1038](https://github.com/openscd/open-scd/issues/1038)). Something Jakob is looking at within the publisher plugin currently.
    - Support updating of configuration revision (low-priority, see [#562](https://github.com/openscd/open-scd/issues/562))
-   - (If possible) allow single-click three-phase connections (low-priority, see [#1088](https://github.com/openscd/open-scd/issues/1088))
    - Provide subscriber oriented view for later-binding GOOSE/SMV ([#1025](https://github.com/openscd/open-scd/issues/1025))   
+   - (If possible) allow single-click three-phase connections (low-priority, see [#1088](https://github.com/openscd/open-scd/issues/1088))
 
 1. Export IID file ([#361](https://github.com/openscd/open-scd/issues/361)) - this is useful as some software (GE Enervista) doesn't allow import of configuration parameters from an SCD file.
 
