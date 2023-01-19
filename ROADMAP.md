@@ -30,6 +30,8 @@ Feature ideas for the OpenSCD project. They are currently not prioritized.
 
 **_NOTE: Transpower has at this time made no decision on whether we will or won't use OpenSCD for these tasks and this doesn't represent an any such undertaking but it is provided as an exploration of requirements and use cases_**
 
+(This list is somewhat longer than I was hoping...)
+
 In order of priority and somewhat tailored to what seems achievable within our digital substation project's time constraints and expectations:
 
 1. Finish transition to OpenSCD core -- as above. We expect to have a range of plugins to simplify, automate and ensure repeatable configurations and having these as separately versioned npm modules will improve visibility, maintenance and modularity.
@@ -52,24 +54,28 @@ In order of priority and somewhat tailored to what seems achievable within our d
      - Drag and drop of SLD symbols to create elements (from voltage level, bay, transformer, conducting equipment etc.) (including the `sxy` namespace coordinates)
      - Ability to edit key parameters (voltage levels, descriptions)
      - Ability to rotate symbols
-     - Ability to group objects, copy and paste and carry out basic alignment tasks (or to be connectable on a grid)
+     - Ability to group objects for the purposes of doing copy and paste and carrying out basic alignment tasks (or to be connectable on a grid)
      - Ability to "flip" a group of objects (to allow a bay to drawn in a particular direction -- Transpower draws bays to match the physical orientation of the site)
-     - Ability to verify/trace connectivity
+     - Ability to verify/trace connectivity (related: [#458](https://github.com/openscd/open-scd/issues/458))
 
 1. Substation Editor. The Substation editor provides much of the desired capability but does not yet allow:
 
    - Connection of a an IED to a set of LNodes. (see [#1128](https://github.com/openscd/open-scd/issues/1128))
+   - Add/edit/remove remaining process elements (especially TransformerWinding, TapChanger, Line, see the [project](https://github.com/openscd/open-scd/projects/1))  
    - Ability to model the NeutralPoint of a transformer. Transpower needs to be able to assign CTRs to the neutral point of the transformer so we need to be able to model this ([#796](https://github.com/openscd/open-scd/issues/796))
+   
 
 1. General SCL diffing/merging tool -- this is quite a significant piece of work but is important to allow:
 
    - Updating of an SCD file from IID file provided by an ICT. This is needed for the round trip from e.g. DIGSI 5 where the initial ICD file is inadequate and a bay specific IID file must be used. We would like to update the IED in the system configuration tool (generated from a ICD file) with the IID from the ICT. There is always going to be a need for customisation/update of specific devices which don't match the template ICD files. (This is S110 of Table G.2 in IEC 61850-6 Ed 2.1).
 
-   - Being able to verify changes quickly and efficiently and handle collisions/merge differences if multiple people are working on the same project (currently we would plan to use git and plain-text differencing for management of SCL files)
+   - Being able to verify changes quickly and efficiently and handle collisions/merge differences if multiple people are working on the same project (currently we would plan to use git and plain-text differencing for management of SCL files).
 
-   - Being able to exchange one IED with another with a slightly different data model
+   - Being able to exchange one IED with another with a slightly different data model.
+   
+   - Being able to do a difference between a "normalised" XML file to avoid different serialisation order of attributes or whitespace changes.
 
-   Some initial prototyping and ideating done by Daniel/Christian (see also: [#896](https://github.com/openscd/open-scd/issues/896), [#669](https://github.com/openscd/open-scd/issues/669), [#892](https://github.com/openscd/open-scd/issues/892), [#349](https://github.com/openscd/open-scd/issues/349))
+   Some initial prototyping and ideating done by Daniel/Christian but not very well documented by Daniel (see also: [#896](https://github.com/openscd/open-scd/issues/896), [#669](https://github.com/openscd/open-scd/issues/669), [#892](https://github.com/openscd/open-scd/issues/892), [#349](https://github.com/openscd/open-scd/issues/349)). This is mostly on an "SCL-diff" rather than an XML difference but the general approach may be applicable.
 
 1. Complete the publisher plugin 
 
