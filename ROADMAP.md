@@ -26,11 +26,9 @@ Feature ideas for the OpenSCD project. They are currently not prioritized.
 - Engineering Workflow Editor
 - Graphical network diagram view for Communication section editor
 
-## Transpower Input (18/01/2023)
+## Transpower Input (Jan 2023)
 
 **_NOTE: Transpower has at this time made no decision on whether we will or won't use OpenSCD for these tasks and this doesn't represent an any such undertaking but it is provided as an exploration of requirements and use cases_**
-
-(This list is somewhat longer than I was hoping...)
 
 In order of priority and somewhat tailored to what seems achievable within our digital substation project's time constraints and expectations:
 
@@ -49,14 +47,16 @@ In order of priority and somewhat tailored to what seems achievable within our d
 
 1. SLD Editor
 
-   - Transpower wishes to carry out "top-down engineering" based on the SLD editor. The Substation editor in OpenSCD already provides much of the capability required.
-   - However the following are outstanding:
+   Transpower wishes to carry out "top-down engineering" based on the SLD editor. The Substation editor in OpenSCD already provides an early prototype of the capability required.
+   However the following are outstanding:
      - Drag and drop of SLD symbols to create elements (from voltage level, bay, transformer, conducting equipment etc.) (including the `sxy` namespace coordinates)
      - Ability to edit key parameters (voltage levels, descriptions)
      - Ability to rotate symbols
-     - Ability to group objects for the purposes of doing copy and paste and carrying out basic alignment tasks (or to be connectable on a grid)
+     - Ability to group objects for the purposes of doing copy and paste and carrying out basic alignment tasks (or to be connectable on a grid). Ideally symbols could be resized to allow distinguishing different elements (e.g. an earthing transformer compared to a power transformer).
      - Ability to "flip" a group of objects (to allow a bay to drawn in a particular direction -- Transpower draws bays to match the physical orientation of the site)
      - Ability to verify/trace connectivity (related: [#458](https://github.com/openscd/open-scd/issues/458))
+     
+   Perhaps the best example of an SLD editor we are familiar with is the editor provided in Omicron RelaySimTest which is powerful and intuitive.  
 
 1. Substation Editor. The Substation editor provides much of the desired capability but does not yet allow:
 
@@ -80,13 +80,20 @@ In order of priority and somewhat tailored to what seems achievable within our d
 1. Complete the publisher plugin 
 
    - Provide the ability to add FCDOs to RCBs to allow MMS SCADA map augmentation ([#1092](https://github.com/openscd/open-scd/issues/1092))
-   - Provide subscriber oriented view for later-binding GOOSE/SMV ([#1025](https://github.com/openscd/open-scd/issues/1025))
 
 1. Complete the subscription editors:
 
    - Allow DO based GOOSE subscriptions (low-priority, see [#1104](https://github.com/openscd/open-scd/issues/1104))
    - Allow reassignment or provide API to allow reassignment of LGOS and LSVS ([#1038](https://github.com/openscd/open-scd/issues/1038))
    - Support updating of configuration revision (low-priority, see [#562](https://github.com/openscd/open-scd/issues/562))
-   - (If possible) allow single click three-phase connections (low-priority, see [#1088](https://github.com/openscd/open-scd/issues/1088))
+   - (If possible) allow single-click three-phase connections (low-priority, see [#1088](https://github.com/openscd/open-scd/issues/1088))
+   - Provide subscriber oriented view for later-binding GOOSE/SMV ([#1025](https://github.com/openscd/open-scd/issues/1025))   
 
 1. Export IID file ([#361](https://github.com/openscd/open-scd/issues/361)) - this is useful as some software (GE Enervista) doesn't allow import of configuration parameters from an SCD file.
+
+1. We may want to write validation plugins or OCL rules to ensure that our configurations meet some requirements. We haven't explored this very far at the moment, but broadly:
+
+   - Are all LNs assigned and configured
+   - Are all SV FCDAs assigned and configured
+   - Are there ExtRefs which aren't configured
+   - What is a "good, orthogonal" way to check an SCL achieves particular functionality without using humans to check lists of data?
