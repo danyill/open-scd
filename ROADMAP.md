@@ -28,7 +28,11 @@ Feature ideas for the OpenSCD project. They are currently not prioritized.
 
 ## Transpower Input (Jan 2023)
 
-**_NOTE: Transpower has at this time made no decision on whether we will or won't use OpenSCD for these tasks and this doesn't represent an any such undertaking but it is provided as an exploration of requirements and use cases_**
+**_NOTE: Transpower has at this time made no decision on whether we will or won't use OpenSCD for these tasks and this doesn't represent an any such undertaking but it is provided as an exploration of ideas, requirements and use cases_**
+
+One difference in Transpower's approach from what European utilities do, is that Transpower doesn't carry out "turn-key" designs. Instead, Transpower selects, standardises and templates equipment in "standard-designs". 
+These templates are then used by consultants and technicians who carry out site-specific designs based on the standard/typical.
+So Transpower's approach in the digital substation is heavily focussed on simple, consistent application of templates and not so much on specification of functionality.
 
 In order of priority and somewhat tailored to what seems achievable within our digital substation project's time constraints and expectations:
 
