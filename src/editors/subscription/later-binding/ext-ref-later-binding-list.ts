@@ -12,7 +12,10 @@ import { get, translate } from 'lit-translate';
 
 import {
   cloneElement,
+  createUpdateAction,
   Delete,
+  findControlBlocks,
+  findFCDAs,
   getDescriptionAttribute,
   identity,
   newActionEvent,
@@ -55,6 +58,11 @@ export class ExtRefLaterBindingList extends LitElement {
   currentSelectedFcdaElement: Element | undefined;
   @state()
   currentIedElement: Element | undefined;
+
+  serviceTypeLookup = {
+    GSEControl: 'GOOSE',
+    SampledValueControl: 'SMV',
+  };
 
   constructor() {
     super();
@@ -120,14 +128,9 @@ export class ExtRefLaterBindingList extends LitElement {
    * @param extRefElement - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRefElement: Element): void {
-    if (
-      !this.currentIedElement ||
-      !this.currentSelectedFcdaElement ||
-      !this.currentSelectedControlElement!
-    ) {
-      return;
-    }
-    const clonedExtRefElement = cloneElement(extRefElement, {
+    const updateAction = createUpdateAction(extRefElement, {
+      intAddr: extRefElement.getAttribute('intAddr'),
+      desc: extRefElement.getAttribute('desc'),
       iedName: null,
       ldInst: null,
       prefix: null,
@@ -143,31 +146,27 @@ export class ExtRefLaterBindingList extends LitElement {
       srcCBName: null,
     });
 
-    const replaceAction = {
-      old: { element: extRefElement },
-      new: { element: clonedExtRefElement },
-    };
-
     const subscriberIed = extRefElement.closest('IED') || undefined;
+    const fcdaElements = findFCDAs(extRefElement);
     const removeSubscriptionActions: Delete[] = [];
+    const controlBlock =
+      Array.from(findControlBlocks(extRefElement))[0] ?? undefined;
     if (canRemoveSubscriptionSupervision(extRefElement))
       removeSubscriptionActions.push(
-        ...removeSubscriptionSupervision(
-          this.currentSelectedControlElement,
-          subscriberIed
-        )
+        ...removeSubscriptionSupervision(controlBlock, subscriberIed)
       );
 
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.disconnect`),
-        actions: [replaceAction, ...removeSubscriptionActions],
+        actions: [updateAction, ...removeSubscriptionActions],
       })
     );
+
     this.dispatchEvent(
       newSubscriptionChangedEvent(
-        this.currentSelectedControlElement,
-        this.currentSelectedFcdaElement
+        controlBlock,
+        fcdaElements.length !== 0 ? fcdaElements[0] : undefined
       )
     );
   }
@@ -186,16 +185,11 @@ export class ExtRefLaterBindingList extends LitElement {
       return;
     }
 
-    const replaceAction = {
-      old: { element: extRefElement },
-      new: {
-        element: updateExtRefElement(
-          extRefElement,
-          this.currentSelectedControlElement,
-          this.currentSelectedFcdaElement
-        ),
-      },
-    };
+    const updateAction = updateExtRefElement(
+      extRefElement,
+      this.currentSelectedControlElement,
+      this.currentSelectedFcdaElement
+    );
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const supervisionActions = instantiateSubscriptionSupervision(
@@ -206,7 +200,7 @@ export class ExtRefLaterBindingList extends LitElement {
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.connect`),
-        actions: [replaceAction, ...supervisionActions],
+        actions: [updateAction, ...supervisionActions],
       })
     );
     this.dispatchEvent(
@@ -232,7 +226,13 @@ export class ExtRefLaterBindingList extends LitElement {
       <Element>this.doc.getRootNode(),
       this.currentSelectedFcdaElement,
       true
-    ).filter(extRefElement => !isSubscribed(extRefElement));
+    ).filter(
+      extRefElement =>
+        !isSubscribed(extRefElement) &&
+        (!extRefElement.hasAttribute('serviceType') ||
+          extRefElement.getAttribute('serviceType') ===
+            this.serviceTypeLookup[this.controlTag])
+    );
   }
 
   private renderTitle(): TemplateResult {
@@ -261,7 +261,7 @@ export class ExtRefLaterBindingList extends LitElement {
           ? ` (${identity(supervisionNode)})`
           : ''}</span
       >
-      <mwc-icon slot="graphic">swap_horiz</mwc-icon>
+      <mwc-icon slot="graphic">link</mwc-icon>
       ${supervisionNode !== null
         ? html`<mwc-icon title="${identity(supervisionNode)}" slot="meta"
             >monitor_heart</mwc-icon
@@ -336,7 +336,7 @@ export class ExtRefLaterBindingList extends LitElement {
               <span slot="secondary"
                 >${identity(extRefElement.parentElement)}</span
               >
-              <mwc-icon slot="graphic">arrow_back</mwc-icon>
+              <mwc-icon slot="graphic">link_off</mwc-icon>
             </mwc-list-item>`
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>

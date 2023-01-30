@@ -77,7 +77,7 @@ describe('GOOSE Subscribe Later Binding Plugin', () => {
     expect(getSelectedSubItemValue(fcdaListElement)).to.be.null;
     expect(
       extRefListElement['getAvailableExtRefElements']().length
-    ).to.be.equal(5);
+    ).to.be.equal(3);
 
     (<HTMLElement>(
       extRefListElement.shadowRoot!.querySelector(
@@ -92,7 +92,7 @@ describe('GOOSE Subscribe Later Binding Plugin', () => {
     expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('1');
     expect(
       extRefListElement['getAvailableExtRefElements']().length
-    ).to.be.equal(4);
+    ).to.be.equal(2);
   });
 
   it('when unsubscribing a subscribed ExtRef then the lists are changed', async () => {
@@ -113,13 +113,14 @@ describe('GOOSE Subscribe Later Binding Plugin', () => {
     expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('2');
     expect(
       extRefListElement['getAvailableExtRefElements']().length
-    ).to.be.equal(5);
+    ).to.be.equal(3);
 
     (<HTMLElement>(
       extRefListElement.shadowRoot!.querySelector(
         'mwc-list-item[value="GOOSE_Subscriber>>Earth_Switch> CSWI 1>GOOSE:GOOSE2 QB2_Disconnector/ LLN0  GOOSE_Publisher QB2_Disconnector/ CSWI 1 Pos q@Pos;CSWI1/Pos/q"]'
       )
     )).click();
+    await fcdaListElement.requestUpdate();
     await element.requestUpdate();
 
     expect(
@@ -128,6 +129,6 @@ describe('GOOSE Subscribe Later Binding Plugin', () => {
     expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('1');
     expect(
       extRefListElement['getAvailableExtRefElements']().length
-    ).to.be.equal(6);
+    ).to.be.equal(4);
   });
 });
