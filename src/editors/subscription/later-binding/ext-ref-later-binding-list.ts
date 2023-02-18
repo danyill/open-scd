@@ -105,6 +105,7 @@ export class ExtRefLaterBindingList extends LitElement {
     this.currentSelectedControlElement = event.detail.control;
     this.currentSelectedFcdaElement = event.detail.fcda;
 
+    console.log('received onFcdaSelectEvent');
     // Retrieve the IED Element to which the FCDA belongs.
     // These ExtRef Elements will be excluded.
     this.currentIedElement = this.currentSelectedFcdaElement
@@ -117,13 +118,23 @@ export class ExtRefLaterBindingList extends LitElement {
       !isSubscribed(this.currentSelectedExtRefElement)
     ) {
       this.subscribe(this.currentSelectedExtRefElement);
-      this.extRefsData = this.extRefsData.set(
-        getExtRefId(this.currentSelectedExtRefElement),
-        this.getExtRefData(this.currentSelectedExtRefElement)
-      );
+
+      const newData = this.getExtRefData(this.currentSelectedExtRefElement);
+      if (newData)
+        this.extRefsData.set(
+          getExtRefId(this.currentSelectedExtRefElement),
+          newData
+        );
+      // this.extRefsData = this.extRefsData.set(
+      //   getExtRefId(this.currentSelectedExtRefElement),
+      //   this.getExtRefData(this.currentSelectedExtRefElement)
+      // );
 
       // IMPORTANT: Endless update loop will occur if this line is removed!
       this.currentSelectedExtRefElement = undefined;
+      this.currentIedElement = undefined;
+      this.currentSelectedControlElement = undefined;
+      this.currentSelectedFcdaElement = undefined;
     }
   }
 
@@ -348,7 +359,9 @@ export class ExtRefLaterBindingList extends LitElement {
     </mwc-list-item>`;
   }
 
-  private getExtRefData(extRefElement: Element): Record<string, unknown> {
+  private getExtRefData(
+    extRefElement: Element
+  ): Record<string, unknown> | null {
     let subscriberFCDA: Element | undefined = undefined;
     let supervisionNode: Element | null = null;
     let controlBlockDescription: string | undefined = undefined;
@@ -362,15 +375,17 @@ export class ExtRefLaterBindingList extends LitElement {
         getFcdaSrcControlBlockDescription(extRefElement);
     }
 
-    const iedName =
-      extRefElement.closest('IED')!.getAttribute('name') ?? 'unknown';
+    const ied = extRefElement.closest('IED');
+    if (!ied) return null;
+
     if (supervisionNode) {
       supervisionDescription = (<string>identity(supervisionNode)).slice(
-        iedName.length + 2
+        ied!.getAttribute('name')!.length + 2
       );
     }
 
     const extRefData = {
+      iedName: ied.getAttribute('name') ?? 'unknown',
       supervisionNode: supervisionNode,
       isDisabled: this.unsupportedExtRefElement(extRefElement),
       description: getDescriptionAttribute(extRefElement),
@@ -408,12 +423,8 @@ export class ExtRefLaterBindingList extends LitElement {
     }
   }
 
-  private renderCompleteExtRefElement(
-    extRefElement: Element,
-    ied: Element
-  ): TemplateResult {
+  private renderCompleteExtRefElement(extRefElement: Element): TemplateResult {
     const data = this.getCompleteExtRefDetails(extRefElement);
-    const iedName = ied.getAttribute('name')!;
 
     return html`<mwc-list-item
       graphic="large"
@@ -428,10 +439,10 @@ export class ExtRefLaterBindingList extends LitElement {
     >
       <span>
         ${(<string>identity(extRefElement.parentElement)).slice(
-          iedName.length + 2
+          (<string>data.iedName).length + 2
         )}:
         ${extRefElement.getAttribute('intAddr')}
-        ${data.subscribed && data.subscriberFCDA
+        ${data.isSubscribed && data.subscriberFCDA
           ? `⬌ ${data.idSubscriberFCDA ?? 'Unknown'}`
           : ''}
       </span>
@@ -446,9 +457,9 @@ export class ExtRefLaterBindingList extends LitElement {
           : nothing}
       </span>
       <mwc-icon slot="graphic"
-        >${data.subscribed ? 'link' : 'link_off'}</mwc-icon
+        >${data.isSubscribed ? 'link' : 'link_off'}</mwc-icon
       >
-      ${(data.subscribed && data.supervisionNode) !== null
+      ${(data.isSubscribed && data.supervisionNode) !== null
         ? html`<mwc-icon title="${<string>data.idSupervisionNode}" slot="meta"
             >monitor_heart</mwc-icon
           >`
@@ -469,7 +480,9 @@ export class ExtRefLaterBindingList extends LitElement {
                 const supervisionId = data.idSupervisionNode;
                 return `${
                   typeof data.idExtRef === 'string' ? data.idExtRef : ''
-                }${typeof supervisionId === 'string' ? supervisionId : ''}`;
+                } ${typeof supervisionId === 'string' ? supervisionId : ''} ${
+                  data.idSubscriberFCDA ?? ''
+                }`;
               })
               .join(' ')}"
           >
@@ -478,7 +491,7 @@ export class ExtRefLaterBindingList extends LitElement {
           </mwc-list-item>
           <li divider role="separator"></li>
           ${Array.from(this.getExtRefElementsByIED(ied)).map(extRef =>
-            this.renderCompleteExtRefElement(extRef, ied)
+            this.renderCompleteExtRefElement(extRef)
           )} 
           </mwc-list-item>`
     )}`;

@@ -102,6 +102,10 @@ export class FcdaBindingList extends LitElement {
   }
 
   private resetExtRefCount(event: SubscriptionChangedEvent): void {
+    console.log('received SubscriptionChangedEvent');
+    if (!this.publisherView) {
+      this.resetSelection();
+    }
     if (event.detail.control && event.detail.fcda) {
       const controlBlockFcdaId = `${identity(event.detail.control)} ${identity(
         event.detail.fcda
@@ -152,8 +156,9 @@ export class FcdaBindingList extends LitElement {
 
     // When a new document is loaded or the selection is changed
     // we will fire the FCDA Select Event.
+
+    // _changedProperties.has('doc') ||
     if (
-      _changedProperties.has('doc') ||
       _changedProperties.has('selectedControlElement') ||
       _changedProperties.has('selectedFcdaElement')
     ) {
@@ -190,6 +195,7 @@ export class FcdaBindingList extends LitElement {
             // and also make sure the the activated remains on the ext-ref-later-binding-list
             // current broken by the update cycle
             selectedElement.selected = false;
+            this.requestUpdate();
           }
         }
       }}
