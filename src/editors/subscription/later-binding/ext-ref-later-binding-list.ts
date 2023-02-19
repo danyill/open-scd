@@ -9,7 +9,9 @@ import {
   state,
   TemplateResult,
 } from 'lit-element';
-import { nothing } from 'lit-html';
+
+import { noChange, nothing } from 'lit-html';
+import { cache } from 'lit-html/directives/cache.js';
 import { get, translate } from 'lit-translate';
 
 import {
@@ -575,6 +577,7 @@ export class ExtRefLaterBindingList extends LitElement {
   }
 
   render(): TemplateResult {
+    // if (this.doc) {
     return html` <section tabindex="0">
       ${(this.currentSelectedControlElement &&
         this.currentSelectedFcdaElement) ||
@@ -585,7 +588,7 @@ export class ExtRefLaterBindingList extends LitElement {
               ${this.publisherView
                 ? html`${this.renderSubscribedExtRefs()}
                   ${this.renderAvailableExtRefs()}`
-                : html`${this.renderExtRefsByIED()}`}
+                : this.renderExtRefsByIED()}
             </filtered-list>
           `
         : html`${this.renderTitle()}
@@ -593,6 +596,8 @@ export class ExtRefLaterBindingList extends LitElement {
               ${translate('subscription.laterBinding.extRefList.noSelection')}
             </h3> `}
     </section>`;
+    // }
+    // return noChange;
   }
 
   static styles = css`
