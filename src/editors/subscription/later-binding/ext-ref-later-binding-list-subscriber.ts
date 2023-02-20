@@ -60,8 +60,8 @@ function getExtRefId(extRefElement: Element): string {
  * A sub element for showing all Ext Refs from a FCDA Element.
  * The List reacts on a custom event to know which FCDA Element was selected and updated the view.
  */
-@customElement('extref-later-binding-list')
-export class ExtRefLaterBindingList extends LitElement {
+@customElement('extref-later-binding-list-subscriber')
+export class ExtRefLaterBindingListHey extends LitElement {
   @property({ attribute: false })
   doc!: XMLDocument;
   @property()

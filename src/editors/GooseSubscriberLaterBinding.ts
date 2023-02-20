@@ -9,6 +9,7 @@ import {
 
 import './subscription/fcda-binding-list.js';
 import './subscription/later-binding/ext-ref-later-binding-list.js';
+import './subscription/later-binding/ext-ref-later-binding-list-subscriber.js';
 
 /** An editor [[`plugin`]] for Subscribe Later Binding (GOOSE). */
 export default class GooseSubscribeLaterBindingPlugin extends LitElement {
@@ -43,6 +44,30 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
     // ? ' publisher'
     // : ' subscriber'}" -->
     //  ${classMap(classes)}
+
+    if (this.selectedViewIsPublisher) {
+      console.log('We are the publisher');
+      return html`<div>
+        <div class="container publisher">
+          <fcda-binding-list
+            class="column"
+            controlTag="GSEControl"
+            .publisherView="${this.selectedViewIsPublisher}"
+            .includeLaterBinding="${true}"
+            .doc="${this.doc}"
+          >
+          </fcda-binding-list>
+          <extref-later-binding-list
+            class="column"
+            controlTag="GSEControl"
+            .publisherView="${this.selectedViewIsPublisher}"
+            .includeLaterBinding="${true}"
+            .doc="${this.doc}"
+          ></extref-later-binding-list>
+        </div>
+      </div>`;
+    }
+    console.log('we are the subscriber view');
     return html`<div>
       <div class="container publisher">
         <fcda-binding-list
@@ -53,14 +78,13 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
           .doc="${this.doc}"
         >
         </fcda-binding-list>
-        <extref-later-binding-list
+        <extref-later-binding-list-subscriber
           class="column"
           controlTag="GSEControl"
           .publisherView="${this.selectedViewIsPublisher}"
           .includeLaterBinding="${true}"
           .doc="${this.doc}"
-        >
-        </extref-later-binding-list>
+        ></extref-later-binding-list-subscriber>
       </div>
     </div>`;
   }
@@ -82,6 +106,10 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
     }
 
     .container:not(.publisher) extref-later-binding-list.column {
+      flex: auto 1 1;
+    }
+
+    .container:not(.publisher) extref-later-binding-list-subscriber.column {
       flex: auto 1 1;
     }
 

@@ -6,10 +6,13 @@ import {
   compareNames,
   Create,
   createElement,
+  createUpdateAction,
   Delete,
   getSclSchemaVersion,
   isPublic,
   minAvailableLogicalNodeInstance,
+  SimpleAction,
+  Update,
 } from '../../foundation.js';
 import {
   createTemplateStructure,
@@ -694,7 +697,7 @@ export function updateExtRefElement(
   extRefElement: Element,
   controlElement: Element | undefined,
   fcdaElement: Element
-): Element {
+): Update {
   const iedName = fcdaElement.closest('IED')?.getAttribute('name') ?? null;
   const [ldInst, prefix, lnClass, lnInst, doName, daName] = [
     'ldInst',
@@ -707,7 +710,8 @@ export function updateExtRefElement(
 
   if (getSclSchemaVersion(fcdaElement.ownerDocument) === '2003') {
     // Edition 2003(1) does not define serviceType and its MCD attribute starting with src...
-    return cloneElement(extRefElement, {
+
+    return createUpdateAction(extRefElement, {
       iedName,
       serviceType: null,
       ldInst,
@@ -726,7 +730,7 @@ export function updateExtRefElement(
 
   if (!controlElement || !serviceTypes[controlElement.tagName]) {
     //for invalid control block tag name assume polling
-    return cloneElement(extRefElement, {
+    return createUpdateAction(extRefElement, {
       iedName,
       serviceType: 'Poll',
       ldInst,
@@ -752,7 +756,7 @@ export function updateExtRefElement(
   const srcLNInst = controlElement.closest('LN0,LN')?.getAttribute('inst');
   const srcCBName = controlElement.getAttribute('name') ?? '';
 
-  return cloneElement(extRefElement, {
+  return createUpdateAction(extRefElement, {
     iedName,
     serviceType: serviceTypes[controlElement.tagName]!,
     ldInst,
