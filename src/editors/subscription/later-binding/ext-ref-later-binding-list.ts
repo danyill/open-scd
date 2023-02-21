@@ -12,7 +12,10 @@ import { get, translate } from 'lit-translate';
 
 import {
   cloneElement,
+  createUpdateAction,
   Delete,
+  findControlBlocks,
+  findFCDAs,
   getDescriptionAttribute,
   identity,
   newActionEvent,
@@ -125,14 +128,9 @@ export class ExtRefLaterBindingList extends LitElement {
    * @param extRefElement - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRefElement: Element): void {
-    if (
-      !this.currentIedElement ||
-      !this.currentSelectedFcdaElement ||
-      !this.currentSelectedControlElement!
-    ) {
-      return;
-    }
-    const clonedExtRefElement = cloneElement(extRefElement, {
+    const updateAction = createUpdateAction(extRefElement, {
+      intAddr: extRefElement.getAttribute('intAddr'),
+      desc: extRefElement.getAttribute('desc'),
       iedName: null,
       ldInst: null,
       prefix: null,
@@ -148,31 +146,26 @@ export class ExtRefLaterBindingList extends LitElement {
       srcCBName: null,
     });
 
-    const replaceAction = {
-      old: { element: extRefElement },
-      new: { element: clonedExtRefElement },
-    };
-
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const removeSubscriptionActions: Delete[] = [];
+    const controlBlock =
+      Array.from(findControlBlocks(extRefElement))[0] ?? undefined;
     if (canRemoveSubscriptionSupervision(extRefElement))
       removeSubscriptionActions.push(
-        ...removeSubscriptionSupervision(
-          this.currentSelectedControlElement,
-          subscriberIed
-        )
+        ...removeSubscriptionSupervision(controlBlock, subscriberIed)
       );
 
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.disconnect`),
-        actions: [replaceAction, ...removeSubscriptionActions],
+        actions: [updateAction, ...removeSubscriptionActions],
       })
     );
+    const fcdaElements = findFCDAs(extRefElement);
     this.dispatchEvent(
       newSubscriptionChangedEvent(
-        this.currentSelectedControlElement,
-        this.currentSelectedFcdaElement
+        controlBlock,
+        fcdaElements.length !== 0 ? fcdaElements[0] : undefined
       )
     );
   }
@@ -191,16 +184,11 @@ export class ExtRefLaterBindingList extends LitElement {
       return;
     }
 
-    const replaceAction = {
-      old: { element: extRefElement },
-      new: {
-        element: updateExtRefElement(
-          extRefElement,
-          this.currentSelectedControlElement,
-          this.currentSelectedFcdaElement
-        ),
-      },
-    };
+    const updateAction = updateExtRefElement(
+      extRefElement,
+      this.currentSelectedControlElement,
+      this.currentSelectedFcdaElement
+    );
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const supervisionActions = instantiateSubscriptionSupervision(
@@ -211,7 +199,7 @@ export class ExtRefLaterBindingList extends LitElement {
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.connect`),
-        actions: [replaceAction, ...supervisionActions],
+        actions: [updateAction, ...supervisionActions],
       })
     );
     this.dispatchEvent(

@@ -1,8 +1,6 @@
-import { css, html, LitElement, query } from 'lit-element';
-import { nothing } from 'lit-html';
+import { css, LitElement, query } from 'lit-element';
 
 import {
-  cloneElement,
   compareNames,
   Create,
   createElement,
@@ -11,7 +9,6 @@ import {
   getSclSchemaVersion,
   isPublic,
   minAvailableLogicalNodeInstance,
-  SimpleAction,
   Update,
 } from '../../foundation.js';
 import {
@@ -467,6 +464,19 @@ export function getFirstSubscribedExtRef(
   return extRef !== undefined ? extRef : null;
 }
 
+export function getCbReference(extRef: Element): string {
+  const extRefValues = ['iedName', 'srcPrefix', 'srcCBName'];
+  const [srcIedName, srcPrefix, srcCBName] = extRefValues.map(
+    attr => extRef.getAttribute(attr) ?? ''
+  );
+
+  const srcLDInst =
+    extRef.getAttribute('srcLDInst') ?? extRef.getAttribute('ldInst');
+  const srcLNClass = extRef.getAttribute('srcLNClass') ?? 'LLN0';
+
+  return `${srcIedName}${srcPrefix}${srcLDInst}/${srcLNClass}.${srcCBName}`;
+}
+
 /** Returns the subscriber's supervision LN for a given control block and extRef element
  *
  * @param extRef - The extRef SCL element in the subscribing IED.
@@ -475,31 +485,49 @@ export function getFirstSubscribedExtRef(
 export function getExistingSupervision(extRef: Element | null): Element | null {
   if (extRef === null) return null;
 
-  const extRefValues = ['iedName', 'serviceType', 'srcPrefix', 'srcCBName'];
-  const [srcIedName, serviceType, srcPrefix, srcCBName] = extRefValues.map(
-    attr => extRef.getAttribute(attr) ?? ''
-  );
-
-  const supervisionType = serviceType === 'GOOSE' ? 'LGOS' : 'LSVS';
+  // TODO: This seems inadequate. ServiceType may not be defined but we could search
+  // both LGOS and LSVS instances.
+  const supervisionType =
+    extRef.getAttribute('serviceType') === 'GOOSE' ? 'LGOS' : 'LSVS';
   const refSelector =
     supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
 
-  const srcLDInst =
-    extRef.getAttribute('srcLDInst') ?? extRef.getAttribute('ldInst');
-  const srcLNClass = extRef.getAttribute('srcLNClass') ?? 'LLN0';
-
-  const cbReference = `${srcIedName}${srcPrefix}${srcLDInst}/${srcLNClass}.${srcCBName}`;
   const iedName = extRef.closest('IED')?.getAttribute('name');
 
   const candidates = Array.from(
     extRef.ownerDocument
       .querySelector(`IED[name="${iedName}"]`)!
       .querySelectorAll(
-        `LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+        `LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
       )
-  ).find(val => val.textContent === cbReference);
+  ).find(val => val.textContent === getCbReference(extRef));
 
   return candidates !== undefined ? candidates.closest('LN')! : null;
+}
+
+// TODO: Update me
+/** Returns the subscriber's supervision LN for a given control block and extRef element
+ *
+ * @param extRef - The extRef SCL element in the subscribing IED.
+ * @returns The supervision LN instance or null if not found
+ */
+export function getUsedSupervisionInstances(
+  element: Document,
+  serviceType: string
+): Element[] {
+  const supervisionType = serviceType === 'GOOSE' ? 'LGOS' : 'LSVS';
+  const refSelector =
+    supervisionType === 'LGOS' ? 'DOI[name="GoCBRef"]' : 'DOI[name="SvCBRef"]';
+
+  const supervisionInstances = Array.from(
+    element!.querySelectorAll(
+      `IED LDevice > LN[lnClass="${supervisionType}"]>${refSelector}>DAI[name="setSrcRef"]>Val`
+    )
+  )
+    .filter(val => val.textContent !== '')
+    .map(val => val.closest('LN')!);
+
+  return supervisionInstances;
 }
 
 /**
@@ -708,12 +736,14 @@ export function updateExtRefElement(
     'daName',
   ].map(attr => fcdaElement.getAttribute(attr));
   const intAddr = extRefElement.getAttribute('intAddr');
+  const desc = extRefElement.getAttribute('desc');
 
   if (getSclSchemaVersion(fcdaElement.ownerDocument) === '2003') {
     // Edition 2003(1) does not define serviceType and its MCD attribute starting with src...
 
     return createUpdateAction(extRefElement, {
       intAddr,
+      desc,
       iedName,
       serviceType: null,
       ldInst,
@@ -734,6 +764,7 @@ export function updateExtRefElement(
     //for invalid control block tag name assume polling
     return createUpdateAction(extRefElement, {
       intAddr,
+      desc,
       iedName,
       serviceType: 'Poll',
       ldInst,
@@ -761,6 +792,7 @@ export function updateExtRefElement(
 
   return createUpdateAction(extRefElement, {
     intAddr,
+    desc,
     iedName,
     serviceType: serviceTypes[controlElement.tagName]!,
     ldInst,

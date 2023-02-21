@@ -153,7 +153,6 @@ export class FcdaBindingList extends LitElement {
   }
 
   private onFcdaSelect(controlElement: Element, fcdaElement: Element) {
-    // this.resetSelection();
     this.selectedControlElement = controlElement;
     this.selectedFcdaElement = fcdaElement;
     this.dispatchEvent(
