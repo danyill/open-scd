@@ -19,61 +19,23 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
   @query('div.container')
   containerElement!: Element;
 
-  selectedViewIsPublisher = true;
+  @property({ attribute: false })
+  subscriberView = false;
 
   protected firstUpdated(): void {
     this.addEventListener('change-view', () => {
-      this.selectedViewIsPublisher = !this.selectedViewIsPublisher;
-      // TODO: using a classmap or changing the class on div.container is not working for me, see below. Why?
-      this.containerElement.classList.toggle('publisher');
-      this.requestUpdate();
+      this.subscriberView = !this.subscriberView;
     });
   }
 
   render(): TemplateResult {
-    // TODO: Why didn't this work.
-    // Ways I have tried to implement this:
-    // const classes = {
-    //   container: true,
-    //   publisher: this.selectedViewIsPublisher,
-    //   subscriber: !this.selectedViewIsPublisher,
-    // };
-
-    // ${classMap(classes)}
-    // <!-- class="container${this.selectedViewIsPublisher
-    // ? ' publisher'
-    // : ' subscriber'}" -->
-    //  ${classMap(classes)}
-
-    if (this.selectedViewIsPublisher) {
-      console.log('We are the publisher');
-      return html`<div>
-        <div class="container publisher">
-          <fcda-binding-list
-            class="column"
-            controlTag="GSEControl"
-            .publisherView="${this.selectedViewIsPublisher}"
-            .includeLaterBinding="${true}"
-            .doc="${this.doc}"
-          >
-          </fcda-binding-list>
-          <extref-later-binding-list
-            class="column"
-            controlTag="GSEControl"
-            .publisherView="${this.selectedViewIsPublisher}"
-            .includeLaterBinding="${true}"
-            .doc="${this.doc}"
-          ></extref-later-binding-list>
-        </div>
-      </div>`;
-    }
-    console.log('we are the subscriber view');
-    return html`<div>
-      <div class="container publisher">
+    if (this.subscriberView) {
+      console.log('We are the subscriber view');
+      return html`<div class="container" ?subscriberview=${this.subscriberView}>
         <fcda-binding-list
           class="column"
           controlTag="GSEControl"
-          .publisherView="${this.selectedViewIsPublisher}"
+          .subscriberview="${this.subscriberView}"
           .includeLaterBinding="${true}"
           .doc="${this.doc}"
         >
@@ -81,11 +43,26 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
         <extref-later-binding-list-subscriber
           class="column"
           controlTag="GSEControl"
-          .publisherView="${this.selectedViewIsPublisher}"
-          .includeLaterBinding="${true}"
           .doc="${this.doc}"
         ></extref-later-binding-list-subscriber>
-      </div>
+      </div>`;
+    }
+    console.log('we are the publisher view');
+    return html`<div class="container" ?subscriberview=${this.subscriberView}>
+      <fcda-binding-list
+        class="column"
+        controlTag="GSEControl"
+        .subscriberview="${this.subscriberView}"
+        .includeLaterBinding="${true}"
+        .doc="${this.doc}"
+      >
+      </fcda-binding-list>
+      <extref-later-binding-list
+        class="column"
+        controlTag="GSEControl"
+        .includeLaterBinding="${true}"
+        .doc="${this.doc}"
+      ></extref-later-binding-list>
     </div>`;
   }
 
@@ -98,22 +75,22 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
       display: flex;
       padding: 8px 6px 16px;
       height: calc(100vh - 136px);
+      flex: auto;
     }
 
-    .container:not(.publisher) {
-      flex: auto;
+    .container:not(subscriberview) {
+      flex-direction: row;
+    }
+
+    .container[subscriberview] {
       flex-direction: row-reverse;
     }
 
-    .container:not(.publisher) extref-later-binding-list.column {
+    .container[subscriberview] .column {
       flex: auto 1 1;
     }
 
-    .container:not(.publisher) extref-later-binding-list-subscriber.column {
-      flex: auto 1 1;
-    }
-
-    .container:not(.publisher) fcda-binding-list.column {
+    .container[subscriberview] fcda-binding-list.column {
       flex: auto 2 1;
     }
 

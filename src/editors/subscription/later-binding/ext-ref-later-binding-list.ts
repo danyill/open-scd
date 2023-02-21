@@ -4,28 +4,18 @@ import {
   html,
   LitElement,
   property,
-  PropertyValues,
-  query,
   state,
   TemplateResult,
 } from 'lit-element';
-
-import { noChange, nothing } from 'lit-html';
-import { cache } from 'lit-html/directives/cache.js';
-import { repeat } from 'lit-html/directives/repeat.js';
+import { nothing } from 'lit-html';
 import { get, translate } from 'lit-translate';
 
 import {
   cloneElement,
-  createUpdateAction,
   Delete,
-  findControlBlocks,
-  findFCDAs,
   getDescriptionAttribute,
-  getNameAttribute,
   identity,
   newActionEvent,
-  selector,
 } from '../../../foundation.js';
 
 import {
@@ -38,7 +28,6 @@ import {
   FcdaSelectEvent,
   newSubscriptionChangedEvent,
   canRemoveSubscriptionSupervision,
-  getOrderedIeds,
 } from '../foundation.js';
 
 import {
@@ -47,14 +36,7 @@ import {
   fcdaSpecification,
   inputRestriction,
   isSubscribed,
-  getFcdaSrcControlBlockDescription,
 } from './foundation.js';
-
-function getExtRefId(extRefElement: Element): string {
-  return `${identity(extRefElement.parentElement)} ${extRefElement.getAttribute(
-    'intAddr'
-  )}`;
-}
 
 /**
  * A sub element for showing all Ext Refs from a FCDA Element.
@@ -66,10 +48,6 @@ export class ExtRefLaterBindingList extends LitElement {
   doc!: XMLDocument;
   @property()
   controlTag!: 'SampledValueControl' | 'GSEControl';
-  @property()
-  includeLaterBinding!: boolean;
-  @property()
-  publisherView!: boolean;
 
   @state()
   currentSelectedControlElement: Element | undefined;
@@ -77,18 +55,6 @@ export class ExtRefLaterBindingList extends LitElement {
   currentSelectedFcdaElement: Element | undefined;
   @state()
   currentIedElement: Element | undefined;
-
-  @state()
-  private extRefsData = new Map();
-
-  @property({
-    attribute: false,
-    // FIXME: Force not updating
-    hasChanged() {
-      return false;
-    },
-  })
-  currentSelectedExtRefElement: Element | undefined;
 
   serviceTypeLookup = {
     GSEControl: 'GOOSE',
@@ -109,37 +75,11 @@ export class ExtRefLaterBindingList extends LitElement {
     this.currentSelectedControlElement = event.detail.control;
     this.currentSelectedFcdaElement = event.detail.fcda;
 
-    console.log('received onFcdaSelectEvent');
     // Retrieve the IED Element to which the FCDA belongs.
     // These ExtRef Elements will be excluded.
     this.currentIedElement = this.currentSelectedFcdaElement
       ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
       : undefined;
-
-    if (
-      !this.publisherView &&
-      this.currentSelectedExtRefElement &&
-      !isSubscribed(this.currentSelectedExtRefElement)
-    ) {
-      this.subscribe(this.currentSelectedExtRefElement);
-
-      const newData = this.getExtRefData(this.currentSelectedExtRefElement);
-      if (newData)
-        this.extRefsData.set(
-          getExtRefId(this.currentSelectedExtRefElement),
-          newData
-        );
-      // this.extRefsData = this.extRefsData.set(
-      //   getExtRefId(this.currentSelectedExtRefElement),
-      //   this.getExtRefData(this.currentSelectedExtRefElement)
-      // );
-
-      // IMPORTANT: Endless update loop will occur if this line is removed!
-      this.currentSelectedExtRefElement = undefined;
-      this.currentIedElement = undefined;
-      this.currentSelectedControlElement = undefined;
-      this.currentSelectedFcdaElement = undefined;
-    }
   }
 
   /**
@@ -185,10 +125,14 @@ export class ExtRefLaterBindingList extends LitElement {
    * @param extRefElement - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRefElement: Element): void {
-    // const clonedExtRefElement = cloneElement(extRefElement, {
-
-    // });
-    const updateAction = createUpdateAction(extRefElement, {
+    if (
+      !this.currentIedElement ||
+      !this.currentSelectedFcdaElement ||
+      !this.currentSelectedControlElement!
+    ) {
+      return;
+    }
+    const clonedExtRefElement = cloneElement(extRefElement, {
       iedName: null,
       ldInst: null,
       prefix: null,
@@ -204,31 +148,31 @@ export class ExtRefLaterBindingList extends LitElement {
       srcCBName: null,
     });
 
-    // const replaceAction = {
-    //   old: { element: extRefElement },
-    //   new: { element: clonedExtRefElement },
-    // };
+    const replaceAction = {
+      old: { element: extRefElement },
+      new: { element: clonedExtRefElement },
+    };
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const removeSubscriptionActions: Delete[] = [];
-    const controlBlock =
-      Array.from(findControlBlocks(extRefElement))[0] ?? undefined;
     if (canRemoveSubscriptionSupervision(extRefElement))
       removeSubscriptionActions.push(
-        ...removeSubscriptionSupervision(controlBlock, subscriberIed)
+        ...removeSubscriptionSupervision(
+          this.currentSelectedControlElement,
+          subscriberIed
+        )
       );
 
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.disconnect`),
-        actions: [updateAction, ...removeSubscriptionActions],
+        actions: [replaceAction, ...removeSubscriptionActions],
       })
     );
-    const fcdaElements = findFCDAs(extRefElement);
     this.dispatchEvent(
       newSubscriptionChangedEvent(
-        controlBlock,
-        fcdaElements.length !== 0 ? fcdaElements[0] : undefined
+        this.currentSelectedControlElement,
+        this.currentSelectedFcdaElement
       )
     );
   }
@@ -247,22 +191,16 @@ export class ExtRefLaterBindingList extends LitElement {
       return;
     }
 
-    const updateAction = updateExtRefElement(
-      extRefElement,
-      this.currentSelectedControlElement,
-      this.currentSelectedFcdaElement
-    );
-
-    // const replaceAction = {
-    //   old: { element: extRefElement },
-    //   new: {
-    //     element: updateExtRefElement(
-    //       extRefElement,
-    //       this.currentSelectedControlElement,
-    //       this.currentSelectedFcdaElement
-    //     ),
-    //   },
-    // };
+    const replaceAction = {
+      old: { element: extRefElement },
+      new: {
+        element: updateExtRefElement(
+          extRefElement,
+          this.currentSelectedControlElement,
+          this.currentSelectedFcdaElement
+        ),
+      },
+    };
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const supervisionActions = instantiateSubscriptionSupervision(
@@ -273,7 +211,7 @@ export class ExtRefLaterBindingList extends LitElement {
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.connect`),
-        actions: [updateAction, ...supervisionActions],
+        actions: [replaceAction, ...supervisionActions],
       })
     );
     this.dispatchEvent(
@@ -308,38 +246,9 @@ export class ExtRefLaterBindingList extends LitElement {
     );
   }
 
-  private getExtRefElementsByIED(ied: Element): Element[] {
-    const addrPath = function (e: Element) {
-      return `${identity(e.parentElement)}${e.getAttribute('intAddr') ?? ''}`;
-    };
-    return Array.from(ied.querySelectorAll('ExtRef'))
-      .filter(
-        extRefElement =>
-          (extRefElement.hasAttribute('intAddr') &&
-            !extRefElement.hasAttribute('serviceType')) ||
-          extRefElement.getAttribute('serviceType') ===
-            this.serviceTypeLookup[this.controlTag]
-      )
-      .sort((a, b) => {
-        return addrPath(a).localeCompare(addrPath(b));
-      });
-  }
-
   private renderTitle(): TemplateResult {
     return html`<h1>
       ${translate(`subscription.laterBinding.extRefList.title`)}
-      ${!this.publisherView && this.includeLaterBinding
-        ? html`<mwc-icon-button
-            icon="alt_route"
-            title="${translate(
-              `subscription.laterBinding.extRefList.switchView`
-            )}"
-            @click=${() =>
-              this.dispatchEvent(
-                new Event('change-view', { bubbles: true, composed: true })
-              )}
-          ></mwc-icon-button>`
-        : nothing}
     </h1>`;
   }
 
@@ -363,155 +272,13 @@ export class ExtRefLaterBindingList extends LitElement {
           ? ` (${identity(supervisionNode)})`
           : ''}</span
       >
-      <mwc-icon slot="graphic">link</mwc-icon>
+      <mwc-icon slot="graphic">swap_horiz</mwc-icon>
       ${supervisionNode !== null
         ? html`<mwc-icon title="${identity(supervisionNode)}" slot="meta"
             >monitor_heart</mwc-icon
           >`
         : nothing}
     </mwc-list-item>`;
-  }
-
-  private getExtRefData(
-    extRefElement: Element
-  ): Record<string, unknown> | null {
-    let subscriberFCDA: Element | undefined = undefined;
-    let supervisionNode: Element | null = null;
-    let controlBlockDescription: string | undefined = undefined;
-    let supervisionDescription: string | undefined = undefined;
-
-    const subscribed = isSubscribed(extRefElement);
-    if (subscribed) {
-      subscriberFCDA = findFCDAs(extRefElement).find(x => x !== undefined);
-      supervisionNode = getExistingSupervision(extRefElement);
-      controlBlockDescription =
-        getFcdaSrcControlBlockDescription(extRefElement);
-    }
-
-    const ied = extRefElement.closest('IED');
-    // removed a line
-
-    if (supervisionNode) {
-      supervisionDescription = (<string>identity(supervisionNode)).slice(
-        ied!.getAttribute('name')!.length + 2
-      );
-    }
-
-    const extRefData = {
-      iedName: ied?.getAttribute('name') ?? 'unknown',
-      supervisionNode: supervisionNode,
-      isDisabled: this.unsupportedExtRefElement(extRefElement),
-      description: getDescriptionAttribute(extRefElement),
-      supervisionDescription: supervisionDescription,
-      controlBlockDescription: controlBlockDescription,
-      isSubscribed: subscribed,
-      idSupervisionNode: identity(supervisionNode),
-      idExtRefElement: identity(extRefElement),
-      idSubscriberFCDA: subscriberFCDA ? identity(subscriberFCDA!) : '',
-      subscriberFCDA: subscriberFCDA,
-    };
-
-    return extRefData;
-  }
-
-  private getCompleteExtRefDetails(
-    extRefElement: Element
-  ): Record<string, unknown> {
-    const extRefId = `${identity(
-      extRefElement.parentElement
-    )} ${extRefElement.getAttribute('intAddr')}`;
-
-    if (!this.extRefsData.has(extRefId)) {
-      this.extRefsData.set(extRefId, this.getExtRefData(extRefElement));
-    }
-    return this.extRefsData.get(extRefId);
-  }
-
-  protected updated(_changedProperties: PropertyValues): void {
-    super.updated(_changedProperties);
-
-    // When a new document is loaded we will reset the Map to clear old entries.
-    if (_changedProperties.has('doc')) {
-      this.extRefsData = new Map();
-    }
-  }
-
-  private renderCompleteExtRefElement(extRefElement: Element): TemplateResult {
-    const data = this.getCompleteExtRefDetails(extRefElement);
-
-    return html`<mwc-list-item
-      graphic="large"
-      ?hasMeta=${data.supervisionNode !== null}
-      ?disabled=${<boolean>data.isDisabled}
-      twoline
-      @click=${() => {
-        this.currentSelectedExtRefElement = extRefElement;
-        if (data.isSubscribed) this.unsubscribe(extRefElement);
-      }}
-      value="${data.idExtRefElement} ${data.idSupervisionNode ?? ''}"
-    >
-      <span>
-        ${(<string>identity(extRefElement.parentElement)).slice(
-          (<string>data.iedName).length + 2
-        )}:
-        ${extRefElement.getAttribute('intAddr')}
-        ${data.isSubscribed && data.subscriberFCDA
-          ? `⬌ ${data.idSubscriberFCDA ?? 'Unknown'}`
-          : ''}
-      </span>
-      <span slot="secondary"
-        >${getDescriptionAttribute(extRefElement)
-          ? html` ${getDescriptionAttribute(extRefElement)}`
-          : nothing}
-        ${data.supervisionDescription || data.controlBlockDescription
-          ? html`(${[data.controlBlockDescription, data.supervisionDescription]
-              .filter(desc => desc !== undefined)
-              .join(', ')})`
-          : nothing}
-      </span>
-      <mwc-icon slot="graphic"
-        >${data.isSubscribed ? 'link' : 'link_off'}</mwc-icon
-      >
-      ${(data.isSubscribed && data.supervisionNode) !== null
-        ? html`<mwc-icon title="${<string>data.idSupervisionNode}" slot="meta"
-            >monitor_heart</mwc-icon
-          >`
-        : nothing}
-    </mwc-list-item>`;
-  }
-
-  private renderExtRefsByIED(): TemplateResult {
-    return html`${repeat(
-      getOrderedIeds(this.doc),
-      i => identity(i),
-      ied =>
-        html`
-          <mwc-list-item
-            noninteractive
-            graphic="icon"
-            value="${Array.from(ied.querySelectorAll('ExtRef'))
-              .map(extRef => {
-                const data = this.getCompleteExtRefDetails(extRef);
-                const supervisionId = data.idSupervisionNode;
-                return `${
-                  typeof data.idExtRef === 'string' ? data.idExtRef : ''
-                } ${typeof supervisionId === 'string' ? supervisionId : ''} ${
-                  data.idSubscriberFCDA ?? ''
-                }`;
-              })
-              .join(' ')}"
-          >
-            <span>${getNameAttribute(ied)}</span>
-            <mwc-icon slot="graphic">developer_board</mwc-icon>
-          </mwc-list-item>
-          <li divider role="separator"></li>
-          ${repeat(
-            Array.from(this.getExtRefElementsByIED(ied)),
-            exId => identity(exId),
-            extRef => this.renderCompleteExtRefElement(extRef)
-          )} 
-          </mwc-list-item>`
-    )}`;
   }
 
   private renderSubscribedExtRefs(): TemplateResult {
@@ -580,7 +347,7 @@ export class ExtRefLaterBindingList extends LitElement {
               <span slot="secondary"
                 >${identity(extRefElement.parentElement)}</span
               >
-              <mwc-icon slot="graphic">link_off</mwc-icon>
+              <mwc-icon slot="graphic">arrow_back</mwc-icon>
             </mwc-list-item>`
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>
@@ -592,39 +359,24 @@ export class ExtRefLaterBindingList extends LitElement {
   }
 
   render(): TemplateResult {
-    // if (this.doc) {
     return html` <section tabindex="0">
-      ${(this.currentSelectedControlElement &&
-        this.currentSelectedFcdaElement) ||
-      !this.publisherView
+      ${this.currentSelectedControlElement && this.currentSelectedFcdaElement
         ? html`
             ${this.renderTitle()}
-            <filtered-list ?activatable=${!this.publisherView}>
-              ${this.publisherView
-                ? html`${this.renderSubscribedExtRefs()}
-                  ${this.renderAvailableExtRefs()}`
-                : this.renderExtRefsByIED()}
+            <filtered-list>
+              ${this.renderSubscribedExtRefs()} ${this.renderAvailableExtRefs()}
             </filtered-list>
           `
-        : html`${this.renderTitle()}
-            <h3>
+        : html`
+            <h1>
               ${translate('subscription.laterBinding.extRefList.noSelection')}
-            </h3> `}
+            </h1>
+          `}
     </section>`;
-    // }
-    // return noChange;
   }
 
   static styles = css`
     ${styles}
-
-    h3 {
-      color: var(--mdc-theme-on-surface);
-      font-family: 'Roboto', sans-serif;
-      font-weight: 300;
-      margin: 4px 8px 16px;
-      padding-left: 0.3em;
-    }
 
     mwc-list-item.hidden[noninteractive] + li[divider] {
       display: none;

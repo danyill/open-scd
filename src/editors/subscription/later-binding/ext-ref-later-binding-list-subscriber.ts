@@ -5,18 +5,15 @@ import {
   LitElement,
   property,
   PropertyValues,
-  query,
   state,
   TemplateResult,
 } from 'lit-element';
 
-import { noChange, nothing } from 'lit-html';
-import { cache } from 'lit-html/directives/cache.js';
+import { nothing } from 'lit-html';
 import { repeat } from 'lit-html/directives/repeat.js';
 import { get, translate } from 'lit-translate';
 
 import {
-  cloneElement,
   createUpdateAction,
   Delete,
   findControlBlocks,
@@ -25,7 +22,6 @@ import {
   getNameAttribute,
   identity,
   newActionEvent,
-  selector,
 } from '../../../foundation.js';
 
 import {
@@ -42,8 +38,6 @@ import {
 } from '../foundation.js';
 
 import {
-  getExtRefElements,
-  getSubscribedExtRefElements,
   fcdaSpecification,
   inputRestriction,
   isSubscribed,
@@ -66,28 +60,15 @@ export class ExtRefLaterBindingListHey extends LitElement {
   doc!: XMLDocument;
   @property()
   controlTag!: 'SampledValueControl' | 'GSEControl';
-  @property()
-  includeLaterBinding!: boolean;
-  @property()
-  publisherView!: boolean;
-
-  @state()
-  currentSelectedControlElement: Element | undefined;
-  @state()
-  currentSelectedFcdaElement: Element | undefined;
-  @state()
-  currentIedElement: Element | undefined;
+  @property({ attribute: true })
+  subscriberview!: boolean;
 
   @state()
   private extRefsData = new Map();
 
-  @property({
-    attribute: false,
-    // FIXME: Force not updating
-    hasChanged() {
-      return false;
-    },
-  })
+  selectedPublisherControlElement: Element | undefined;
+  selectedPublisherFcdaElement: Element | undefined;
+  selectedPublisherIedElement: Element | undefined;
   currentSelectedExtRefElement: Element | undefined;
 
   serviceTypeLookup = {
@@ -106,18 +87,17 @@ export class ExtRefLaterBindingListHey extends LitElement {
   }
 
   private async onFcdaSelectEvent(event: FcdaSelectEvent) {
-    this.currentSelectedControlElement = event.detail.control;
-    this.currentSelectedFcdaElement = event.detail.fcda;
+    this.selectedPublisherControlElement = event.detail.control;
+    this.selectedPublisherFcdaElement = event.detail.fcda;
 
     console.log('received onFcdaSelectEvent');
     // Retrieve the IED Element to which the FCDA belongs.
     // These ExtRef Elements will be excluded.
-    this.currentIedElement = this.currentSelectedFcdaElement
-      ? this.currentSelectedFcdaElement.closest('IED') ?? undefined
+    this.selectedPublisherIedElement = this.selectedPublisherFcdaElement
+      ? this.selectedPublisherFcdaElement.closest('IED') ?? undefined
       : undefined;
 
     if (
-      !this.publisherView &&
       this.currentSelectedExtRefElement &&
       !isSubscribed(this.currentSelectedExtRefElement)
     ) {
@@ -129,16 +109,11 @@ export class ExtRefLaterBindingListHey extends LitElement {
           getExtRefId(this.currentSelectedExtRefElement),
           newData
         );
-      // this.extRefsData = this.extRefsData.set(
-      //   getExtRefId(this.currentSelectedExtRefElement),
-      //   this.getExtRefData(this.currentSelectedExtRefElement)
-      // );
 
-      // IMPORTANT: Endless update loop will occur if this line is removed!
       this.currentSelectedExtRefElement = undefined;
-      this.currentIedElement = undefined;
-      this.currentSelectedControlElement = undefined;
-      this.currentSelectedFcdaElement = undefined;
+      this.selectedPublisherIedElement = undefined;
+      this.selectedPublisherControlElement = undefined;
+      this.selectedPublisherFcdaElement = undefined;
     }
   }
 
@@ -163,15 +138,15 @@ export class ExtRefLaterBindingListHey extends LitElement {
       return false;
 
     // Not ready for any kind of subscription
-    if (!this.currentSelectedFcdaElement) return true;
+    if (!this.selectedPublisherFcdaElement) return true;
 
-    const fcda = fcdaSpecification(this.currentSelectedFcdaElement);
+    const fcda = fcdaSpecification(this.selectedPublisherFcdaElement);
     const input = inputRestriction(extRef);
 
     if (fcda.cdc === null && input.cdc === null) return true;
     if (fcda.bType === null && input.bType === null) return true;
     if (
-      serviceTypes[this.currentSelectedControlElement?.tagName ?? ''] !==
+      serviceTypes[this.selectedPublisherControlElement?.tagName ?? ''] !==
       extRef.getAttribute('pServT')
     )
       return true;
@@ -185,10 +160,8 @@ export class ExtRefLaterBindingListHey extends LitElement {
    * @param extRefElement - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRefElement: Element): void {
-    // const clonedExtRefElement = cloneElement(extRefElement, {
-
-    // });
     const updateAction = createUpdateAction(extRefElement, {
+      intAddr: extRefElement.getAttribute('intAddr'),
       iedName: null,
       ldInst: null,
       prefix: null,
@@ -203,11 +176,6 @@ export class ExtRefLaterBindingListHey extends LitElement {
       srcLNInst: null,
       srcCBName: null,
     });
-
-    // const replaceAction = {
-    //   old: { element: extRefElement },
-    //   new: { element: clonedExtRefElement },
-    // };
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const removeSubscriptionActions: Delete[] = [];
@@ -240,33 +208,22 @@ export class ExtRefLaterBindingListHey extends LitElement {
    */
   private subscribe(extRefElement: Element): void {
     if (
-      !this.currentIedElement ||
-      !this.currentSelectedFcdaElement ||
-      !this.currentSelectedControlElement!
+      !this.selectedPublisherIedElement ||
+      !this.selectedPublisherFcdaElement ||
+      !this.selectedPublisherControlElement!
     ) {
       return;
     }
 
     const updateAction = updateExtRefElement(
       extRefElement,
-      this.currentSelectedControlElement,
-      this.currentSelectedFcdaElement
+      this.selectedPublisherControlElement,
+      this.selectedPublisherFcdaElement
     );
-
-    // const replaceAction = {
-    //   old: { element: extRefElement },
-    //   new: {
-    //     element: updateExtRefElement(
-    //       extRefElement,
-    //       this.currentSelectedControlElement,
-    //       this.currentSelectedFcdaElement
-    //     ),
-    //   },
-    // };
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
     const supervisionActions = instantiateSubscriptionSupervision(
-      this.currentSelectedControlElement,
+      this.selectedPublisherControlElement,
       subscriberIed
     );
 
@@ -278,33 +235,9 @@ export class ExtRefLaterBindingListHey extends LitElement {
     );
     this.dispatchEvent(
       newSubscriptionChangedEvent(
-        this.currentSelectedControlElement,
-        this.currentSelectedFcdaElement
+        this.selectedPublisherControlElement,
+        this.selectedPublisherFcdaElement
       )
-    );
-  }
-
-  private getSubscribedExtRefElements(): Element[] {
-    return getSubscribedExtRefElements(
-      <Element>this.doc.getRootNode(),
-      this.controlTag,
-      this.currentSelectedFcdaElement,
-      this.currentSelectedControlElement,
-      true
-    );
-  }
-
-  private getAvailableExtRefElements(): Element[] {
-    return getExtRefElements(
-      <Element>this.doc.getRootNode(),
-      this.currentSelectedFcdaElement,
-      true
-    ).filter(
-      extRefElement =>
-        !isSubscribed(extRefElement) &&
-        (!extRefElement.hasAttribute('serviceType') ||
-          extRefElement.getAttribute('serviceType') ===
-            this.serviceTypeLookup[this.controlTag])
     );
   }
 
@@ -328,18 +261,14 @@ export class ExtRefLaterBindingListHey extends LitElement {
   private renderTitle(): TemplateResult {
     return html`<h1>
       ${translate(`subscription.laterBinding.extRefList.title`)}
-      ${!this.publisherView && this.includeLaterBinding
-        ? html`<mwc-icon-button
-            icon="alt_route"
-            title="${translate(
-              `subscription.laterBinding.extRefList.switchView`
-            )}"
-            @click=${() =>
-              this.dispatchEvent(
-                new Event('change-view', { bubbles: true, composed: true })
-              )}
-          ></mwc-icon-button>`
-        : nothing}
+      <mwc-icon-button
+        icon="alt_route"
+        title="${translate(`subscription.laterBinding.extRefList.switchView`)}"
+        @click=${() =>
+          this.dispatchEvent(
+            new Event('change-view', { bubbles: true, composed: true })
+          )}
+      ></mwc-icon-button>
     </h1>`;
   }
 
@@ -514,105 +443,12 @@ export class ExtRefLaterBindingListHey extends LitElement {
     )}`;
   }
 
-  private renderSubscribedExtRefs(): TemplateResult {
-    const subscribedExtRefs = this.getSubscribedExtRefElements();
-    return html`
-      <mwc-list-item
-        noninteractive
-        value="${subscribedExtRefs
-          .map(
-            extRefElement =>
-              getDescriptionAttribute(extRefElement) +
-              ' ' +
-              identity(extRefElement)
-          )
-          .join(' ')}"
-      >
-        <span>${translate('subscription.subscriber.subscribed')}</span>
-      </mwc-list-item>
-      <li divider role="separator"></li>
-      ${subscribedExtRefs.length > 0
-        ? html`${subscribedExtRefs.map(extRefElement =>
-            this.renderExtRefElement(extRefElement)
-          )}`
-        : html`<mwc-list-item graphic="large" noninteractive>
-            ${translate(
-              'subscription.laterBinding.extRefList.noSubscribedExtRefs'
-            )}
-          </mwc-list-item>`}
-    `;
-  }
-
-  private renderAvailableExtRefs(): TemplateResult {
-    const availableExtRefs = this.getAvailableExtRefElements();
-    return html`
-      <mwc-list-item
-        noninteractive
-        value="${availableExtRefs
-          .map(
-            extRefElement =>
-              getDescriptionAttribute(extRefElement) +
-              ' ' +
-              identity(extRefElement)
-          )
-          .join(' ')}"
-      >
-        <span>
-          ${translate('subscription.subscriber.availableToSubscribe')}
-        </span>
-      </mwc-list-item>
-      <li divider role="separator"></li>
-      ${availableExtRefs.length > 0
-        ? html`${availableExtRefs.map(
-            extRefElement => html` <mwc-list-item
-              graphic="large"
-              ?disabled=${this.unsupportedExtRefElement(extRefElement)}
-              twoline
-              @click=${() => this.subscribe(extRefElement)}
-              value="${identity(extRefElement)}"
-            >
-              <span>
-                ${extRefElement.getAttribute('intAddr')}
-                ${getDescriptionAttribute(extRefElement)
-                  ? html` (${getDescriptionAttribute(extRefElement)})`
-                  : nothing}
-              </span>
-              <span slot="secondary"
-                >${identity(extRefElement.parentElement)}</span
-              >
-              <mwc-icon slot="graphic">link_off</mwc-icon>
-            </mwc-list-item>`
-          )}`
-        : html`<mwc-list-item graphic="large" noninteractive>
-            ${translate(
-              'subscription.laterBinding.extRefList.noAvailableExtRefs'
-            )}
-          </mwc-list-item>`}
-    `;
-  }
-
   render(): TemplateResult {
     // if (this.doc) {
     return html` <section tabindex="0">
-      ${(this.currentSelectedControlElement &&
-        this.currentSelectedFcdaElement) ||
-      !this.publisherView
-        ? html`
-            ${this.renderTitle()}
-            <filtered-list ?activatable=${!this.publisherView}>
-              ${this.publisherView
-                ? html`${this.renderSubscribedExtRefs()}
-                  ${this.renderAvailableExtRefs()}`
-                : this.renderExtRefsByIED()}
-            </filtered-list>
-          `
-        : html`${this.renderTitle()}
-            <h3>
-              ${translate('subscription.laterBinding.extRefList.noSelection')}
-            </h3> `}
+      ${this.renderTitle()}
+      <filtered-list activatable>${this.renderExtRefsByIED()}</filtered-list>
     </section>`;
-    // }
-    // return noChange;
   }
 
   static styles = css`

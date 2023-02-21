@@ -45,20 +45,14 @@ type iconLookup = Record<controlTag, SVGTemplateResult>;
  */
 @customElement('fcda-binding-list')
 export class FcdaBindingList extends LitElement {
-  // @property({
-  //   attribute: false,
-  //   hasChanged() {
-  //     return false;
-  //   },
-  // })
   @property()
   doc!: XMLDocument;
   @property()
   controlTag!: controlTag;
   @property()
   includeLaterBinding!: boolean;
-  @property()
-  publisherView!: boolean;
+  @property({ attribute: true })
+  subscriberview!: boolean;
 
   // The selected Elements when a FCDA Line is clicked.
   @property({
@@ -117,7 +111,7 @@ export class FcdaBindingList extends LitElement {
 
   private resetExtRefCount(event: SubscriptionChangedEvent): void {
     console.log('received SubscriptionChangedEvent');
-    if (!this.publisherView) {
+    if (!this.subscriberview) {
       this.resetSelection();
     }
     if (event.detail.control && event.detail.fcda) {
@@ -211,7 +205,7 @@ export class FcdaBindingList extends LitElement {
       class="subitem"
       @click=${() => {
         this.onFcdaSelect(controlElement, fcdaElement);
-        if (!this.publisherView) {
+        if (!this.subscriberview) {
           const selectedElement: ListItem | null =
             this.shadowRoot!.querySelector(
               'filtered-list mwc-list-item[selected]'
@@ -238,7 +232,7 @@ export class FcdaBindingList extends LitElement {
   renderTitle(): TemplateResult {
     return html`<h1>
       ${translate(`subscription.${this.controlTag}.controlBlockList.title`)}
-      ${this.publisherView && this.includeLaterBinding
+      ${!this.subscriberview && this.includeLaterBinding
         ? html`<mwc-icon-button
             icon="alt_route"
             title="${translate(
@@ -258,7 +252,7 @@ export class FcdaBindingList extends LitElement {
     return html` <section tabindex="0">
       ${controlElements.length > 0
         ? html`${this.renderTitle()}
-            <filtered-list ?activatable=${this.publisherView}>
+            <filtered-list ?activatable=${!this.subscriberview}>
               ${controlElements.map(controlElement => {
                 const fcdaElements = this.getFcdaElements(controlElement);
                 return html`

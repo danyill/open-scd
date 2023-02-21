@@ -707,11 +707,13 @@ export function updateExtRefElement(
     'doName',
     'daName',
   ].map(attr => fcdaElement.getAttribute(attr));
+  const intAddr = extRefElement.getAttribute('intAddr');
 
   if (getSclSchemaVersion(fcdaElement.ownerDocument) === '2003') {
     // Edition 2003(1) does not define serviceType and its MCD attribute starting with src...
 
     return createUpdateAction(extRefElement, {
+      intAddr,
       iedName,
       serviceType: null,
       ldInst,
@@ -731,6 +733,7 @@ export function updateExtRefElement(
   if (!controlElement || !serviceTypes[controlElement.tagName]) {
     //for invalid control block tag name assume polling
     return createUpdateAction(extRefElement, {
+      intAddr,
       iedName,
       serviceType: 'Poll',
       ldInst,
@@ -757,6 +760,7 @@ export function updateExtRefElement(
   const srcCBName = controlElement.getAttribute('name') ?? '';
 
   return createUpdateAction(extRefElement, {
+    intAddr,
     iedName,
     serviceType: serviceTypes[controlElement.tagName]!,
     ldInst,
