@@ -4,7 +4,6 @@ import {
   html,
   LitElement,
   property,
-  PropertyValues,
   state,
   TemplateResult,
 } from 'lit-element';
@@ -32,7 +31,6 @@ import {
   SubscriptionChangedEvent,
 } from './foundation.js';
 import { getSubscribedExtRefElements } from './later-binding/foundation.js';
-import { ListItem } from '@material/mwc-list/mwc-list-item';
 
 type controlTag = 'SampledValueControl' | 'GSEControl';
 
@@ -54,21 +52,12 @@ export class FcdaBindingList extends LitElement {
   @property({ attribute: true })
   subscriberview!: boolean;
 
-  // The selected Elements when a FCDA Line is clicked.
-  @property({
-    hasChanged() {
-      return false;
-    },
-  })
-  private selectedControlElement: Element | undefined;
-  @property({
-    hasChanged() {
-      return false;
-    },
-  })
-  private selectedFcdaElement: Element | undefined;
   @state()
   private extRefCounters = new Map();
+
+  // The selected elements when a FCDA Line is clicked.
+  private selectedControlElement: Element | undefined;
+  private selectedFcdaElement: Element | undefined;
 
   private iconControlLookup: iconLookup = {
     SampledValueControl: smvIcon,
@@ -160,41 +149,6 @@ export class FcdaBindingList extends LitElement {
     );
   }
 
-  protected updated(_changedProperties: PropertyValues): void {
-    super.updated(_changedProperties);
-
-    // When a new document is loaded or the selection is changed
-    // we will fire the FCDA Select Event.
-
-    // We should do this onFcdaSelect not here in updated !!!
-    // _changedProperties.has('doc') ||
-    // if (
-    //   _changedProperties.has('selectedControlElement') ||
-    //   _changedProperties.has('selectedFcdaElement')
-    // ) {
-    //   this.dispatchEvent(
-    //     newFcdaSelectEvent(
-    //       this.selectedControlElement,
-    //       this.selectedFcdaElement
-    //     )
-    //   );
-    // }
-
-    // When a new document is loaded we will reset the Map to clear old entries.
-    // if (_changedProperties.has('doc')) {
-    //   this.extRefCounters = new Map();
-    // }
-    // Should we have a new document loaded event -- this is dumb
-  }
-
-  // protected shouldUpdate(
-  //   _changedProperties: Map<string | number | symbol, unknown>
-  // ): boolean {
-  //   if (_changedProperties.has('doc') && _changedProperties.size === 1)
-  //     return false;
-  //   return true;
-  // }
-
   renderFCDA(controlElement: Element, fcdaElement: Element): TemplateResult {
     const fcdaCount = this.getExtRefCount(fcdaElement, controlElement);
     return html`<mwc-list-item
@@ -204,19 +158,6 @@ export class FcdaBindingList extends LitElement {
       class="subitem"
       @click=${() => {
         this.onFcdaSelect(controlElement, fcdaElement);
-        if (!this.subscriberview) {
-          const selectedElement: ListItem | null =
-            this.shadowRoot!.querySelector(
-              'filtered-list mwc-list-item[selected]'
-            );
-          if (selectedElement) {
-            // TODO: This is not really working -- wish to deselect FCDA in the fcda-binding-list
-            // and also make sure the the activated remains on the ext-ref-later-binding-list
-            // current broken by the update cycle
-            selectedElement.selected = false;
-            this.requestUpdate();
-          }
-        }
       }}
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"

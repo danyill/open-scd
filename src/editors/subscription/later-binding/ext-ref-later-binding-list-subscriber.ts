@@ -109,23 +109,26 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
       this.subscribe(this.currentSelectedExtRefElement);
       this.reCreateSupervisionCache();
       // console.log(this.currentActivatedExtRefItem);
-      (<ListItem>(
-        this.shadowRoot!.querySelector('mwc-list-item[activated]')!
-          .nextElementSibling
-      )).selected = true;
-      (<ListItem>(
-        this.shadowRoot!.querySelector('mwc-list-item[activated]')!
-          .nextElementSibling
-      )).activated = true;
-      (<ListItem>(
-        this.shadowRoot!.querySelector('mwc-list-item[activated]')!
-          .nextElementSibling
-      )).requestUpdate();
 
-      // this.currentSelectedExtRefElement = undefined;
-      // this.selectedPublisherIedElement = undefined;
-      // this.selectedPublisherControlElement = undefined;
-      // this.selectedPublisherFcdaElement = undefined;
+      // deactivate/deselect
+      const activatedItem = <ListItem>(
+        this.shadowRoot!.querySelector('mwc-list-item[activated].extref')!
+      );
+      const nextActivatableItem = <ListItem>(
+        this.shadowRoot!.querySelector(
+          'mwc-list-item[activated].extref ~ mwc-list-item.extref'
+        )
+      );
+      activatedItem.selected = false;
+      activatedItem.activated = false;
+      activatedItem.requestUpdate();
+
+      if (nextActivatableItem) {
+        // activate/select next sibling
+        nextActivatableItem!.selected = true;
+        nextActivatableItem!.activated = true;
+        nextActivatableItem!.requestUpdate();
+      }
     }
   }
 
@@ -346,10 +349,11 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
     }
 
     return html`<mwc-list-item
+      twoline
+      class="extref"
       graphic="large"
       ?hasMeta=${supervisionNode !== undefined}
       ?disabled=${this.unsupportedExtRefElement(extRefElement)}
-      twoline
       @click=${() => {
         this.currentSelectedExtRefElement = extRefElement;
         if (subscribed) {
@@ -359,6 +363,9 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
       }}
       @request-selected=${() => {
         this.currentSelectedExtRefElement = extRefElement;
+        (<ListItem>(
+          this.shadowRoot!.querySelector('mwc-list-item[activated].extref')!
+        ))?.requestUpdate();
       }}
       value="${identity(extRefElement)} ${supervisionNode
         ? identity(supervisionNode)
