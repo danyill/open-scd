@@ -215,6 +215,7 @@ export function isSubscribedTo(
     extRefElement.getAttribute('iedName') ===
       fcdaElement?.closest('IED')?.getAttribute('name') &&
     sameAttributeValue(fcdaElement, extRefElement, 'ldInst') &&
+    // TODO: This doesn't look like it handles the prefix correctly.
     sameAttributeValue(fcdaElement, extRefElement, 'prefix') &&
     sameAttributeValue(fcdaElement, extRefElement, 'lnClass') &&
     sameAttributeValue(fcdaElement, extRefElement, 'lnInst') &&
