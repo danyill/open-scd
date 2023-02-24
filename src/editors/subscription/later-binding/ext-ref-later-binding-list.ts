@@ -147,6 +147,7 @@ export class ExtRefLaterBindingList extends LitElement {
     });
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
+    const fcdaElements = findFCDAs(extRefElement);
     const removeSubscriptionActions: Delete[] = [];
     const controlBlock =
       Array.from(findControlBlocks(extRefElement))[0] ?? undefined;
@@ -161,7 +162,7 @@ export class ExtRefLaterBindingList extends LitElement {
         actions: [updateAction, ...removeSubscriptionActions],
       })
     );
-    const fcdaElements = findFCDAs(extRefElement);
+
     this.dispatchEvent(
       newSubscriptionChangedEvent(
         controlBlock,
@@ -260,7 +261,7 @@ export class ExtRefLaterBindingList extends LitElement {
           ? ` (${identity(supervisionNode)})`
           : ''}</span
       >
-      <mwc-icon slot="graphic">swap_horiz</mwc-icon>
+      <mwc-icon slot="graphic">link</mwc-icon>
       ${supervisionNode !== null
         ? html`<mwc-icon title="${identity(supervisionNode)}" slot="meta"
             >monitor_heart</mwc-icon
@@ -335,7 +336,7 @@ export class ExtRefLaterBindingList extends LitElement {
               <span slot="secondary"
                 >${identity(extRefElement.parentElement)}</span
               >
-              <mwc-icon slot="graphic">arrow_back</mwc-icon>
+              <mwc-icon slot="graphic">link_off</mwc-icon>
             </mwc-list-item>`
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>

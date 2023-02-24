@@ -195,6 +195,7 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
     });
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
+    const fcdaElements = findFCDAs(extRefElement);
     const removeSubscriptionActions: Delete[] = [];
     const controlBlock =
       Array.from(findControlBlocks(extRefElement))[0] ?? undefined;
@@ -209,7 +210,7 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
         actions: [updateAction, ...removeSubscriptionActions],
       })
     );
-    const fcdaElements = findFCDAs(extRefElement);
+
     this.dispatchEvent(
       newSubscriptionChangedEvent(
         controlBlock,

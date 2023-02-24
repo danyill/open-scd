@@ -35,12 +35,13 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
   }
 
   render(): TemplateResult {
+    const controlTag = 'GSEControl';
     if (this.subscriberView) {
       console.log('We are the subscriber view');
       return html`<div class="container" ?subscriberview=${this.subscriberView}>
         <fcda-binding-list
           class="column"
-          controlTag="GSEControl"
+          controlTag="${controlTag}"
           .subscriberview="${this.subscriberView}"
           .includeLaterBinding="${true}"
           .doc="${this.doc}"
@@ -48,7 +49,7 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
         </fcda-binding-list>
         <extref-later-binding-list-subscriber
           class="column"
-          controlTag="GSEControl"
+          controlTag="${controlTag}"
           .doc="${this.doc}"
         ></extref-later-binding-list-subscriber>
       </div>`;
@@ -57,7 +58,7 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
     return html`<div class="container" ?subscriberview=${this.subscriberView}>
       <fcda-binding-list
         class="column"
-        controlTag="GSEControl"
+        controlTag="${controlTag}"
         .subscriberview="${this.subscriberView}"
         .includeLaterBinding="${true}"
         .doc="${this.doc}"
@@ -65,7 +66,7 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
       </fcda-binding-list>
       <extref-later-binding-list
         class="column"
-        controlTag="GSEControl"
+        controlTag="${controlTag}"
         .includeLaterBinding="${true}"
         .doc="${this.doc}"
       ></extref-later-binding-list>

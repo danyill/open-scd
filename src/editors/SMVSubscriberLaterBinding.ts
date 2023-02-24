@@ -18,36 +18,57 @@ export default class SMVSubscribeLaterBindingPlugin extends LitElement {
   @query('div.container')
   containerElement!: Element;
 
-  selectedViewIsPublisher = true;
+  @property({ attribute: false })
+  subscriberView =
+    localStorage.getItem('subscriber-later-binding-smv$change-view') ===
+      'true' ?? false;
 
   protected firstUpdated(): void {
     this.addEventListener('change-view', () => {
-      this.selectedViewIsPublisher = !this.selectedViewIsPublisher;
-      this.containerElement.classList.toggle('publisher');
-      this.requestUpdate();
+      this.subscriberView = !this.subscriberView;
+      localStorage.setItem(
+        'subscriber-later-binding-smv$change-view',
+        `${this.subscriberView}`
+      );
     });
   }
 
   render(): TemplateResult {
-    return html`<div>
-      <div class="container publisher">
+    const controlTag = 'SampledValueControl';
+    if (this.subscriberView) {
+      console.log('We are the subscriber view');
+      return html`<div class="container" ?subscriberview=${this.subscriberView}>
         <fcda-binding-list
           class="column"
-          controlTag="SampledValueControl"
-          .publisherView="${this.selectedViewIsPublisher}"
+          controlTag="${controlTag}"
+          .subscriberview="${this.subscriberView}"
           .includeLaterBinding="${true}"
           .doc="${this.doc}"
         >
         </fcda-binding-list>
-        <extref-later-binding-list
+        <extref-later-binding-list-subscriber
           class="column"
-          controlTag="SampledValueControl"
-          .publisherView="${this.selectedViewIsPublisher}"
-          .includeLaterBinding="${true}"
+          controlTag="${controlTag}"
           .doc="${this.doc}"
-        >
-        </extref-later-binding-list>
-      </div>
+        ></extref-later-binding-list-subscriber>
+      </div>`;
+    }
+    console.log('we are the publisher view');
+    return html`<div class="container" ?subscriberview=${this.subscriberView}>
+      <fcda-binding-list
+        class="column"
+        controlTag="${controlTag}"
+        .subscriberview="${this.subscriberView}"
+        .includeLaterBinding="${true}"
+        .doc="${this.doc}"
+      >
+      </fcda-binding-list>
+      <extref-later-binding-list
+        class="column"
+        controlTag="${controlTag}"
+        .includeLaterBinding="${true}"
+        .doc="${this.doc}"
+      ></extref-later-binding-list>
     </div>`;
   }
 
@@ -60,18 +81,22 @@ export default class SMVSubscribeLaterBindingPlugin extends LitElement {
       display: flex;
       padding: 8px 6px 16px;
       height: calc(100vh - 136px);
+      flex: auto;
     }
 
-    .container:not(.publisher) {
-      flex: auto;
+    .container:not(subscriberview) {
+      flex-direction: row;
+    }
+
+    .container[subscriberview] {
       flex-direction: row-reverse;
     }
 
-    .container:not(.publisher) extref-later-binding-list.column {
+    .container[subscriberview] .column {
       flex: auto 1 1;
     }
 
-    .container:not(.publisher) fcda-binding-list.column {
+    .container[subscriberview] fcda-binding-list.column {
       flex: auto 2 1;
     }
 
