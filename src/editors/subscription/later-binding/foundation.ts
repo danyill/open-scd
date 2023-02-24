@@ -230,14 +230,6 @@ export function isSubscribedTo(
  * @param extRefElement - The Ext Ref Element to check.
  */
 export function isSubscribed(extRefElement: Element): boolean {
-  console.log(
-    extRefElement.hasAttribute('iedName'),
-    extRefElement.hasAttribute('ldInst'),
-    extRefElement.hasAttribute('lnClass'),
-    extRefElement.hasAttribute('lnInst'),
-    extRefElement.hasAttribute('doName'),
-    extRefElement.hasAttribute('daName')
-  );
   return (
     extRefElement.hasAttribute('iedName') &&
     extRefElement.hasAttribute('ldInst') &&
