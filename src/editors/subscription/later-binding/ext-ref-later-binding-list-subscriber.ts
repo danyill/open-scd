@@ -46,7 +46,8 @@ import {
   getFcdaSrcControlBlockDescription,
 } from './foundation.js';
 
-// TODO: Replace with identity function
+// FIXME: Replace with identity function after https://github.com/openscd/open-scd/issues/1179
+// is resolved
 function getExtRefId(extRefElement: Element): string {
   return `${identity(extRefElement.parentElement)} ${extRefElement.getAttribute(
     'intAddr'
@@ -258,9 +259,6 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
   }
 
   private getExtRefElementsByIED(ied: Element): Element[] {
-    const addrPath = function (e: Element) {
-      return `${identity(e.parentElement)}${e.getAttribute('intAddr') ?? ''}`;
-    };
     return Array.from(
       ied.querySelectorAll(
         ':scope > AccessPoint > Server > LDevice > LN > Inputs > ExtRef, :scope > AccessPoint > Server > LDevice > LN0 > Inputs > ExtRef'
@@ -274,7 +272,7 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
             this.serviceTypeLookup[this.controlTag]
       )
       .sort((a, b) => {
-        return addrPath(a).localeCompare(addrPath(b));
+        return getExtRefId(a).localeCompare(getExtRefId(b));
       });
   }
 
@@ -403,7 +401,7 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
     if (this.supervisionData.size === 0) this.reCreateSupervisionCache();
     return html`${repeat(
       getOrderedIeds(this.doc),
-      i => identity(i),
+      i => getExtRefId(i),
       ied =>
         html`
       <mwc-list-item
@@ -428,7 +426,7 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
       <li divider role="separator"></li>
           ${repeat(
             Array.from(this.getExtRefElementsByIED(ied)),
-            exId => identity(exId),
+            exId => getExtRefId(exId),
             extRef => this.renderCompleteExtRefElement(extRef)
           )} 
           </mwc-list-item>`
