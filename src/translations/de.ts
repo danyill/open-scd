@@ -348,6 +348,7 @@ export const de: Translations = {
     disconnect: 'Daten-Attribute Verbindung gelöst',
     subscriber: {
       subscribed: 'Verbunden',
+      onlyConfigured: 'Nur Konfiguriert',
       availableToSubscribe: 'Kann verbunden werden',
       partiallySubscribed: 'Teilweise verbunden',
       noControlBlockSelected: 'Keine Kontrollblock ausgewählt',
