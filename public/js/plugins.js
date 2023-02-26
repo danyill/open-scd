@@ -217,6 +217,15 @@ export const officialPlugins = [
     position: 'middle',
   },
   {
+    name: 'Export Multicast Addresses',
+    src: '/src/menu/ExportMulticastAddresses.js',
+    icon: 'download',
+    default: true,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'middle',
+  },
+  {
     name: 'Show SCL History',
     src: '/src/menu/SclHistory.js',
     icon: 'history_toggle_off',
