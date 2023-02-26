@@ -348,6 +348,7 @@ export const de: Translations = {
     disconnect: 'Daten-Attribute Verbindung gelöst',
     subscriber: {
       subscribed: 'Verbunden',
+      onlyConfigured: 'Nur Konfiguriert',
       availableToSubscribe: 'Kann verbunden werden',
       partiallySubscribed: 'Teilweise verbunden',
       noControlBlockSelected: 'Keine Kontrollblock ausgewählt',
@@ -393,10 +394,12 @@ export const de: Translations = {
     laterBinding: {
       extRefList: {
         title: 'Für Ausgewählte Daten-Attribut Verfügbare Verbindung',
-        noSelection: 'Kein Daten-Attribut ausgewählt',
+        noSelection: 'Kein veröffentlichtes Element ausgewählt',
         noSubscribedExtRefs: 'Keine bestehenden Verbindungen',
         noAvailableExtRefs: 'Keine verfügbaren Eingänge vorhanden',
+        switchView: 'Wechseln Sie zur Publisher-Ansicht',
       },
+      switchControlBlockView: 'Wechseln Sie zur Abonnentenansicht',
     },
     SampledValueControl: {
       controlBlockList: {

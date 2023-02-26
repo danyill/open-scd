@@ -162,12 +162,15 @@ describe('SMV Subscribe Later Binding plugin', () => {
         'mwc-list-item[value="SMV_Subscriber>>Overvoltage> PTRC 1>SMV:currentOnly CurrentTransformer/ LLN0  SMV_Publisher CurrentTransformer/L1 TCTR 1 AmpSv q@AmpSv;TCTR1/AmpSv/q"]'
       )
     )).click();
+    await fcdaListElement.requestUpdate();
     await element.requestUpdate();
 
     expect(
       extRefListElement['getSubscribedExtRefElements']().length
     ).to.be.equal(2);
     expect(getSelectedSubItemValue(fcdaListElement)).to.have.text('2');
+    // TODO: Really interesting failure, Daniel thinks issue is with findControlBlocks and incorrect logic in the unsubscribe function
+    // TODO: Abstract out subscribe and unsubscribe into foundation functions.
     expect(
       extRefListElement['getAvailableExtRefElements']().length
     ).to.be.equal(10);

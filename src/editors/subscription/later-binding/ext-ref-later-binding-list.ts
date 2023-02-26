@@ -13,7 +13,10 @@ import { get, translate } from 'lit-translate';
 import {
   cloneElement,
   ComplexAction,
+  createUpdateAction,
   Delete,
+  findControlBlocks,
+  findFCDAs,
   getDescriptionAttribute,
   identity,
   newActionEvent,
@@ -37,6 +40,7 @@ import {
   fcdaSpecification,
   inputRestriction,
   isSubscribed,
+  unsupportedExtRefElement,
 } from './foundation.js';
 
 /**
@@ -84,56 +88,14 @@ export class ExtRefLaterBindingList extends LitElement {
   }
 
   /**
-   * Check data consistency of source `FCDA` and sink `ExtRef` based on
-   * `ExtRef`'s `pLN`, `pDO`, `pDA` and `pServT` attributes.
-   * Consistent means `CDC` and `bType` of both ExtRef and FCDA is equal.
-   * In case
-   *  - `pLN`, `pDO`, `pDA` or `pServT` attributes are not present, allow subscribing
-   *  - no CDC or bType can be extracted, do not allow subscribing
-   *
-   * @param extRef - The `ExtRef` Element to check against
-   */
-  private unsupportedExtRefElement(extRef: Element): boolean {
-    // Vendor does not provide data for the check
-    if (
-      !extRef.hasAttribute('pLN') ||
-      !extRef.hasAttribute('pDO') ||
-      !extRef.hasAttribute('pDA') ||
-      !extRef.hasAttribute('pServT')
-    )
-      return false;
-
-    // Not ready for any kind of subscription
-    if (!this.currentSelectedFcdaElement) return true;
-
-    const fcda = fcdaSpecification(this.currentSelectedFcdaElement);
-    const input = inputRestriction(extRef);
-
-    if (fcda.cdc === null && input.cdc === null) return true;
-    if (fcda.bType === null && input.bType === null) return true;
-    if (
-      serviceTypes[this.currentSelectedControlElement?.tagName ?? ''] !==
-      extRef.getAttribute('pServT')
-    )
-      return true;
-
-    return fcda.cdc !== input.cdc || fcda.bType !== input.bType;
-  }
-
-  /**
    * Unsubscribing means removing a list of attributes from the ExtRef Element.
    *
    * @param extRefElement - The Ext Ref Element to clean from attributes.
    */
   private unsubscribe(extRefElement: Element): void {
-    if (
-      !this.currentIedElement ||
-      !this.currentSelectedFcdaElement ||
-      !this.currentSelectedControlElement!
-    ) {
-      return;
-    }
-    const clonedExtRefElement = cloneElement(extRefElement, {
+    const updateAction = createUpdateAction(extRefElement, {
+      intAddr: extRefElement.getAttribute('intAddr'),
+      desc: extRefElement.getAttribute('desc'),
       iedName: null,
       ldInst: null,
       prefix: null,
@@ -149,31 +111,27 @@ export class ExtRefLaterBindingList extends LitElement {
       srcCBName: null,
     });
 
-    const replaceAction = {
-      old: { element: extRefElement },
-      new: { element: clonedExtRefElement },
-    };
-
     const subscriberIed = extRefElement.closest('IED') || undefined;
+    const fcdaElements = findFCDAs(extRefElement);
     const removeSubscriptionActions: Delete[] = [];
+    const controlBlock =
+      Array.from(findControlBlocks(extRefElement))[0] ?? undefined;
     if (canRemoveSubscriptionSupervision(extRefElement))
       removeSubscriptionActions.push(
-        ...removeSubscriptionSupervision(
-          this.currentSelectedControlElement,
-          subscriberIed
-        )
+        ...removeSubscriptionSupervision(controlBlock, subscriberIed)
       );
 
     this.dispatchEvent(
       newActionEvent({
         title: get(`subscription.disconnect`),
-        actions: [replaceAction, ...removeSubscriptionActions],
+        actions: [updateAction, ...removeSubscriptionActions],
       })
     );
+
     this.dispatchEvent(
       newSubscriptionChangedEvent(
-        this.currentSelectedControlElement,
-        this.currentSelectedFcdaElement
+        controlBlock,
+        fcdaElements.length !== 0 ? fcdaElements[0] : undefined
       )
     );
   }
@@ -197,17 +155,13 @@ export class ExtRefLaterBindingList extends LitElement {
       title: get(`subscription.connect`),
     };
 
-    const replaceAction = {
-      old: { element: extRefElement },
-      new: {
-        element: updateExtRefElement(
-          extRefElement,
-          this.currentSelectedControlElement,
-          this.currentSelectedFcdaElement
-        ),
-      },
-    };
-    complexAction.actions.push(replaceAction);
+    const updateAction = updateExtRefElement(
+      extRefElement,
+      this.currentSelectedControlElement,
+      this.currentSelectedFcdaElement
+    );
+
+    complexAction.actions.push(updateAction);
 
     const subscriberIed = extRefElement.closest('IED') || undefined;
 
@@ -277,7 +231,7 @@ export class ExtRefLaterBindingList extends LitElement {
           ? ` (${identity(supervisionNode)})`
           : ''}</span
       >
-      <mwc-icon slot="graphic">swap_horiz</mwc-icon>
+      <mwc-icon slot="graphic">link</mwc-icon>
       ${supervisionNode !== null
         ? html`<mwc-icon title="${identity(supervisionNode)}" slot="meta"
             >monitor_heart</mwc-icon
@@ -338,7 +292,11 @@ export class ExtRefLaterBindingList extends LitElement {
         ? html`${availableExtRefs.map(
             extRefElement => html` <mwc-list-item
               graphic="large"
-              ?disabled=${this.unsupportedExtRefElement(extRefElement)}
+              ?disabled=${unsupportedExtRefElement(
+                extRefElement,
+                this.currentSelectedFcdaElement,
+                this.currentSelectedControlElement
+              )}
               twoline
               @click=${() => this.subscribe(extRefElement)}
               value="${identity(extRefElement)}"
@@ -352,7 +310,7 @@ export class ExtRefLaterBindingList extends LitElement {
               <span slot="secondary"
                 >${identity(extRefElement.parentElement)}</span
               >
-              <mwc-icon slot="graphic">arrow_back</mwc-icon>
+              <mwc-icon slot="graphic">link_off</mwc-icon>
             </mwc-list-item>`
           )}`
         : html`<mwc-list-item graphic="large" noninteractive>
