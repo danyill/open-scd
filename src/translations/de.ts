@@ -764,6 +764,10 @@ export const de: Translations = {
         'Maximale Aufrufe überschritten. Maximal zulässig sind {{maxStackDepth}}. Nicht alle überflüßigen Datentypen sind entfernt und das Project is potentiel beschädigt.',
     },
   },
+  multicastNaming: {
+    heading: 'Apply naming convention to {{ name }}',
+    title: 'Select IEDs',
+  },
   controlblock: {
     action: {
       edit: '{{type}} "{{name}}" in IED {{iedName}} bearbeitet',

@@ -761,6 +761,10 @@ export const en = {
         'Max Stack Length Exceeded. Maximum allowed is {{maxStackDepth}}. Datatype cleaning incomplete and file damage may have occurred.',
     },
   },
+  multicastNaming: {
+    heading: 'Apply Multicast Naming Convention',
+    title: 'Select IEDs',
+  },
   controlblock: {
     action: {
       edit: 'Edited {{type}} "{{name}}" in IED {{iedName}}',
