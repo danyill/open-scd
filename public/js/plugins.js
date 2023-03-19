@@ -148,6 +148,15 @@ export const officialPlugins = [
     position: 'middle',
   },
   {
+    name: 'TP Multicast Naming',
+    src: '/src/menu/MulticastNaming.js',
+    icon: 'auto_fix_normal',
+    default: true,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'middle',
+  },
+  {
     name: 'Create Virtual IED',
     src: '/src/menu/VirtualTemplateIED.js',
     icon: 'developer_board',
