@@ -42,6 +42,7 @@ import {
   identity,
   WizardInput,
   WizardMenuActor,
+  formatXml,
 } from './foundation.js';
 
 function renderWizardInput(
@@ -322,10 +323,11 @@ export class WizardDialog extends LitElement {
               base-path="/public/ace"
               wrap
               soft-tabs
-              style="width: 80vw; height: calc(100vh - 240px);"
-              theme="ace/theme/solarized_${localStorage.getItem('theme')}"
+              style="width: 80vw; height: calc(100vh - 240px); font-size: 18px;"
               mode="ace/mode/xml"
-              value="${new XMLSerializer().serializeToString(page.element)}"
+              value="${formatXml(
+                new XMLSerializer().serializeToString(page.element)
+              )}"
             ></ace-editor>`
           : page.content?.map(renderWizardInput)}
       </div>
