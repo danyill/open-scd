@@ -347,6 +347,7 @@ export const en = {
     subscriber: {
       subscribed: 'Subscribed',
       notSubscribed: 'Not Subscribed',
+      onlyConfigured: 'Only Configured',
       availableToSubscribe: 'Available to subscribe',
       partiallySubscribed: 'Partially subscribed',
       noControlBlockSelected: 'No control block selected',
@@ -390,21 +391,28 @@ export const en = {
     },
     laterBinding: {
       extRefList: {
-        title: 'Inputs available for selected data attribute',
-        noSelection: 'No data attribute selected',
+        title: 'Subscriber Inputs',
+        noSelection: 'No published item selected',
         noSubscribedExtRefs: 'No subscribed inputs',
         noAvailableExtRefs: 'No available inputs to subscribe',
+        switchView: 'Switch to Publisher view',
+        filter: 'Filter',
+        settings: 'Settings',
+        autoIncrement: 'Auto-increment',
+        bound: 'Bound',
+        unBound: 'Unbound',
       },
+      switchControlBlockView: 'Switch to Subscriber view',
     },
     SampledValueControl: {
       controlBlockList: {
-        title: 'Sampled Value Messages',
+        title: 'Publisher Sampled Value Messages',
         noControlBlockFound: 'No Sampled Value Messages found',
       },
     },
     GSEControl: {
       controlBlockList: {
-        title: 'GOOSE Messages',
+        title: 'Publisher GOOSE Messages',
         noControlBlockFound: 'No GOOSE Messages found',
       },
     },

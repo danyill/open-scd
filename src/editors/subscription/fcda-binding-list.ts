@@ -33,13 +33,17 @@ import { gooseIcon, smvIcon } from '../../icons/icons.js';
 import { wizards } from '../../wizards/wizard-library.js';
 
 import {
+  ExtRefSelectionChangedEvent,
   getFcdaSubtitleValue,
   getFcdaTitleValue,
   newFcdaSelectEvent,
   styles,
   SubscriptionChangedEvent,
 } from './foundation.js';
-import { getSubscribedExtRefElements } from './later-binding/foundation.js';
+import {
+  getSubscribedExtRefElements,
+  unsupportedExtRefElement,
+} from './later-binding/foundation.js';
 
 type controlTag = 'SampledValueControl' | 'GSEControl';
 
@@ -58,12 +62,9 @@ export class FcdaBindingList extends LitElement {
   controlTag!: controlTag;
   @property()
   includeLaterBinding!: boolean;
+  @property({ attribute: true })
+  subscriberview!: boolean;
 
-  // The selected Elements when a FCDA Line is clicked.
-  @state()
-  private selectedControlElement: Element | undefined;
-  @state()
-  private selectedFcdaElement: Element | undefined;
   @state()
   private extRefCounters = new Map();
 
@@ -114,6 +115,10 @@ export class FcdaBindingList extends LitElement {
   @query('.actions-menu') actionsMenu!: Menu;
   @query('.actions-menu-icon') actionsMenuIcon!: Icon;
   @query('.control-block-list') controlBlockList!: List;
+  // The selected elements when a FCDA Line is clicked.
+  private selectedControlElement: Element | undefined;
+  private selectedFcdaElement: Element | undefined;
+  private selectedExtRefElement: Element | undefined;
 
   private iconControlLookup: iconLookup = {
     SampledValueControl: smvIcon,
@@ -130,6 +135,12 @@ export class FcdaBindingList extends LitElement {
     if (parentDiv) {
       this.resetExtRefCount = this.resetExtRefCount.bind(this);
       parentDiv.addEventListener('subscription-changed', this.resetExtRefCount);
+
+      this.updateExtRefSelection = this.updateExtRefSelection.bind(this);
+      parentDiv.addEventListener(
+        'extref-selection-changed',
+        this.updateExtRefSelection
+      );
     }
   }
 
@@ -155,11 +166,21 @@ export class FcdaBindingList extends LitElement {
   }
 
   private resetExtRefCount(event: SubscriptionChangedEvent): void {
+    if (!this.subscriberview) {
+      this.resetSelection();
+    }
     if (event.detail.control && event.detail.fcda) {
       const controlBlockFcdaId = `${identity(event.detail.control)} ${identity(
         event.detail.fcda
       )}`;
       this.extRefCounters.delete(controlBlockFcdaId);
+    }
+  }
+
+  private updateExtRefSelection(event: ExtRefSelectionChangedEvent): void {
+    if (event.detail.extRefElement) {
+      this.selectedExtRefElement = event.detail.extRefElement;
+      this.requestUpdate();
     }
   }
 
@@ -194,29 +215,15 @@ export class FcdaBindingList extends LitElement {
   }
 
   private onFcdaSelect(controlElement: Element, fcdaElement: Element) {
-    this.resetSelection();
-
     this.selectedControlElement = controlElement;
     this.selectedFcdaElement = fcdaElement;
+    this.dispatchEvent(
+      newFcdaSelectEvent(this.selectedControlElement, this.selectedFcdaElement)
+    );
   }
 
   protected updated(_changedProperties: PropertyValues): void {
     super.updated(_changedProperties);
-
-    // When a new document is loaded or the selection is changed
-    // we will fire the FCDA Select Event.
-    if (
-      _changedProperties.has('doc') ||
-      _changedProperties.has('selectedControlElement') ||
-      _changedProperties.has('selectedFcdaElement')
-    ) {
-      this.dispatchEvent(
-        newFcdaSelectEvent(
-          this.selectedControlElement,
-          this.selectedFcdaElement
-        )
-      );
-    }
 
     // When a new document is loaded we will reset the Map to clear old entries.
     if (_changedProperties.has('doc')) {
@@ -236,6 +243,12 @@ export class FcdaBindingList extends LitElement {
     return html`<mwc-list-item
       graphic="large"
       ?hasMeta=${fcdaCount !== 0}
+      ?disabled=${this.subscriberview &&
+      unsupportedExtRefElement(
+        this.selectedExtRefElement,
+        fcdaElement,
+        controlElement
+      )}
       twoline
       class="${classMap(filterClasses)}"
       @click=${() => this.onFcdaSelect(controlElement, fcdaElement)}
@@ -276,6 +289,19 @@ export class FcdaBindingList extends LitElement {
     };
     return html`<h1>
       ${translate(`subscription.${this.controlTag}.controlBlockList.title`)}
+      ${!this.subscriberview && this.includeLaterBinding
+        ? html`<mwc-icon-button
+            class="switch-view"
+            icon="alt_route"
+            title="${translate(
+              `subscription.laterBinding.switchControlBlockView`
+            )}"
+            @click=${() =>
+              this.dispatchEvent(
+                new Event('change-view', { bubbles: true, composed: true })
+              )}
+          ></mwc-icon-button>`
+        : nothing}
       <mwc-icon-button
         class="actions-menu-icon ${classMap(menuClasses)}"
         icon="filter_list"
@@ -383,12 +409,16 @@ export class FcdaBindingList extends LitElement {
       ${this.renderTitle()}
       ${controlElements
         ? this.renderControls(controlElements)
-        : html`<h4>${translate('subscription.subscriber.notSubscribed')}</h4> `}
+        : html`<h3>${translate('subscription.subscriber.notSubscribed')}</h3> `}
     </section>`;
   }
 
   static styles = css`
     ${styles}
+
+    h3 {
+      margin: 4px 8px 16px;
+    }
 
     mwc-list-item.hidden[noninteractive] + li[divider] {
       display: none;

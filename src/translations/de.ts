@@ -350,6 +350,7 @@ export const de: Translations = {
     subscriber: {
       subscribed: 'Verbunden',
       notSubscribed: 'Nicht Verbunden',
+      onlyConfigured: 'Nur Konfiguriert',
       availableToSubscribe: 'Kann verbunden werden',
       partiallySubscribed: 'Teilweise verbunden',
       noControlBlockSelected: 'Keine Kontrollblock ausgewählt',
@@ -395,10 +396,17 @@ export const de: Translations = {
     laterBinding: {
       extRefList: {
         title: 'Für Ausgewählte Daten-Attribut Verfügbare Verbindung',
-        noSelection: 'Kein Daten-Attribut ausgewählt',
+        noSelection: 'Kein veröffentlichtes Element ausgewählt',
         noSubscribedExtRefs: 'Keine bestehenden Verbindungen',
         noAvailableExtRefs: 'Keine verfügbaren Eingänge vorhanden',
+        switchView: 'Wechseln Sie zur Publisher-Ansicht',
+        filter: 'Filter',
+        settings: 'Einstellungen',
+        autoIncrement: 'Auto-Inkrement',
+        bound: 'Gebunden',
+        unBound: 'Ungebunden',
       },
+      switchControlBlockView: 'Wechseln Sie zur Abonnentenansicht',
     },
     SampledValueControl: {
       controlBlockList: {

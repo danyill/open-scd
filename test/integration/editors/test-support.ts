@@ -5,6 +5,7 @@ import SMVSubscriberLaterBindingPlugin from '../../../src/editors/SMVSubscriberL
 
 import { FcdaBindingList } from '../../../src/editors/subscription/fcda-binding-list.js';
 import { ExtRefLaterBindingList } from '../../../src/editors/subscription/later-binding/ext-ref-later-binding-list.js';
+import { ExtRefLaterBindingListSubscriber } from '../../../src/editors/subscription/later-binding/ext-ref-later-binding-list-subscriber.js';
 import { ExtRefLnBindingList } from '../../../src/editors/subscription/later-binding/ext-ref-ln-binding-list.js';
 
 export function getFCDABindingList(
@@ -48,10 +49,59 @@ export function getExtrefLaterBindingList(
   );
 }
 
+export function getExtrefLaterBindingListSubscriber(
+  element: SMVSubscriberLaterBindingPlugin | GooseSubscribeLaterBindingPlugin
+): ExtRefLaterBindingListSubscriber {
+  return <ExtRefLaterBindingListSubscriber>(
+    element.shadowRoot?.querySelector('extref-later-binding-list-subscriber')
+  );
+}
+
+export function selectExtRefItem(
+  listElement: ExtRefLaterBindingListSubscriber,
+  extRefIdentity: string
+): void {
+  (<HTMLElement>Array.from(
+    listElement.shadowRoot!.querySelectorAll('mwc-list-item.extref')
+  ).find(listItem => {
+    const value = listItem.getAttribute('value') ?? '';
+    return value.includes(extRefIdentity);
+  })).click();
+}
+
+export function getSubscribedExtRefsCount(
+  listElement: ExtRefLaterBindingListSubscriber,
+  iedName: string
+): number {
+  return (
+    Array.from(
+      listElement.shadowRoot!.querySelectorAll(
+        'mwc-list-item.extref.show-bound'
+      )
+    ).filter(listItem => listItem.getAttribute('value')!.startsWith(iedName))
+      .length || 0
+  );
+}
+
 export function getSelectedSubItemValue(
   element: FcdaBindingList
 ): Element | null {
   return element.shadowRoot!.querySelector(
     '.subitem[selected] span[slot="meta"]'
   );
+}
+
+export function getFCDAItemCount(
+  listElement: FcdaBindingList,
+  controlIdentity: string,
+  fcdaIdentity: string
+): string | null | undefined {
+  const element = <HTMLElement>Array.from(
+    listElement.shadowRoot!.querySelectorAll('mwc-list-item.subitem')
+  ).find(listItem => {
+    const value = listItem.getAttribute('value') ?? '';
+    return value.includes(controlIdentity) && value.includes(fcdaIdentity);
+  });
+
+  return element.querySelector('.subitem span[slot="meta"]')?.textContent;
 }
