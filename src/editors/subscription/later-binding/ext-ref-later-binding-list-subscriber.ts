@@ -56,9 +56,6 @@ export class ExtRefLaterBindingListSubscriber extends LitElement {
   @property()
   controlTag!: 'SampledValueControl' | 'GSEControl';
 
-  @property({ attribute: true })
-  subscriberview!: boolean;
-
   @property({ type: Boolean })
   get notAutoIncrement(): boolean {
     return (

@@ -10,6 +10,9 @@ import {
 import './subscription/fcda-binding-list.js';
 import './subscription/later-binding/ext-ref-later-binding-list.js';
 import './subscription/later-binding/ext-ref-later-binding-list-subscriber.js';
+import { SingleSelectedEvent } from '@material/mwc-list/mwc-list-foundation.js';
+
+const controlTag = 'GSEControl';
 
 /** An editor [[`plugin`]] for Subscribe Later Binding (GOOSE). */
 export default class GooseSubscribeLaterBindingPlugin extends LitElement {
@@ -46,40 +49,36 @@ export default class GooseSubscribeLaterBindingPlugin extends LitElement {
     });
   }
 
-  render(): TemplateResult {
-    const controlTag = 'GSEControl';
+  renderExtRef(): TemplateResult {
     if (this.subscriberView) {
-      return html`<div class="container" ?subscriberview=${this.subscriberView}>
-        <fcda-binding-list
-          class="column"
-          controlTag="${controlTag}"
-          .subscriberview="${this.subscriberView}"
-          .includeLaterBinding="${true}"
-          .doc="${this.doc}"
-        >
-        </fcda-binding-list>
-        <extref-later-binding-list-subscriber
-          class="column"
-          controlTag="${controlTag}"
-          .doc="${this.doc}"
-        ></extref-later-binding-list-subscriber>
-      </div>`;
+      return html`<extref-later-binding-list-subscriber
+        class="column"
+        controlTag="${controlTag}"
+        .doc=${this.doc}
+      ></extref-later-binding-list-subscriber>`;
+    } else {
+      return html`<extref-later-binding-list
+        class="column"
+        controlTag="${controlTag}"
+        .doc=${this.doc}
+        @selected=${(ev: SingleSelectedEvent) => {
+          console.log(this, ev);
+        }}
+      ></extref-later-binding-list>`;
     }
+  }
+
+  render(): TemplateResult {
     return html`<div class="container" ?subscriberview=${this.subscriberView}>
       <fcda-binding-list
         class="column"
         controlTag="${controlTag}"
-        .subscriberview="${this.subscriberView}"
-        .includeLaterBinding="${true}"
-        .doc="${this.doc}"
+        ?subscriberview="${this.subscriberView}"
+        ?includeLaterBinding=${true}
+        .doc=${this.doc}
       >
       </fcda-binding-list>
-      <extref-later-binding-list
-        class="column"
-        controlTag="${controlTag}"
-        .includeLaterBinding="${true}"
-        .doc="${this.doc}"
-      ></extref-later-binding-list>
+      ${this.renderExtRef()}
     </div>`;
   }
 

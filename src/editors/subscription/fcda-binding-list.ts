@@ -20,6 +20,7 @@ import {
   getNameAttribute,
   identity,
   newWizardEvent,
+  selector,
 } from '../../foundation.js';
 import { gooseIcon, smvIcon } from '../../icons/icons.js';
 import { wizards } from '../../wizards/wizard-library.js';
@@ -36,6 +37,8 @@ import {
   getSubscribedExtRefElements,
   unsupportedExtRefElement,
 } from './later-binding/foundation.js';
+import { SingleSelectedEvent } from '@material/mwc-list/mwc-list-foundation.js';
+import { FilteredList } from '../../filtered-list.js';
 
 type controlTag = 'SampledValueControl' | 'GSEControl';
 
@@ -52,10 +55,10 @@ export class FcdaBindingList extends LitElement {
   doc!: XMLDocument;
   @property()
   controlTag!: controlTag;
-  @property()
-  includeLaterBinding!: boolean;
-  @property({ attribute: true })
-  subscriberview!: boolean;
+  @property({ type: Boolean })
+  includeLaterBinding?: boolean;
+  @property({ attribute: true, type: Boolean })
+  subscriberview?: boolean;
 
   @state()
   private extRefCounters = new Map();
@@ -142,7 +145,7 @@ export class FcdaBindingList extends LitElement {
         this.controlTag,
         fcdaElement,
         controlElement!,
-        this.includeLaterBinding
+        this.includeLaterBinding ?? false
       ).length;
       this.extRefCounters.set(controlBlockFcdaId, extRefCount);
     }
@@ -189,9 +192,8 @@ export class FcdaBindingList extends LitElement {
       )}
       twoline
       class="subitem"
-      @click=${() => {
-        this.onFcdaSelect(controlElement, fcdaElement);
-      }}
+      data-control="${identity(controlElement)}"
+      data-fcda="${identity(fcdaElement)}"
       value="${identity(controlElement)}
              ${identity(fcdaElement)}"
     >
@@ -226,7 +228,24 @@ export class FcdaBindingList extends LitElement {
     return html` <section tabindex="0">
       ${controlElements.length > 0
         ? html`${this.renderTitle()}
-            <filtered-list ?activatable=${!this.subscriberview}>
+            <filtered-list
+              ?activatable=${!this.subscriberview}
+              @selected=${(ev: SingleSelectedEvent) => {
+                const selectedListItem = (<FilteredList>ev.target).selected;
+                if (!selectedListItem) return;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const { control, fcda } = (<any>selectedListItem).dataset;
+                const controlElement = this.doc.querySelector(
+                  selector(this.controlTag, control)
+                );
+                const fcdaElement = this.doc.querySelector(
+                  selector('FCDA', fcda)
+                );
+                console.log(controlElement, fcdaElement);
+                if (controlElement && fcdaElement)
+                  this.onFcdaSelect(controlElement, fcdaElement);
+              }}
+            >
               ${controlElements.map(controlElement => {
                 const fcdaElements = this.getFcdaElements(controlElement);
                 return html`
