@@ -465,7 +465,7 @@ export default class ImportingIedPlugin extends LitElement {
     }
   }
 
-  public prepareImport(): void {
+  public async prepareImport(): Promise<void> {
     if (!this.importDoc) {
       this.dispatchEvent(
         newLogEvent({
@@ -503,6 +503,12 @@ export default class ImportingIedPlugin extends LitElement {
     }
 
     this.dialog.show();
+
+    await new Promise<void>(resolve => {
+      this.dialog.addEventListener('closed', () => {
+        resolve();
+      });
+    });
   }
 
   /** Loads the file `event.target.files[0]` into [[`src`]] as a `blob:...`. */
@@ -511,23 +517,19 @@ export default class ImportingIedPlugin extends LitElement {
       (<HTMLInputElement | null>event.target)?.files ?? []
     );
 
-    const promises = files.map(async file => {
+    for (const file of files) {
       this.importDoc = new DOMParser().parseFromString(
         await file.text(),
         'application/xml'
       );
+      await this.prepareImport();
 
-      return this.prepareImport();
-    });
-
-    const mergedPromise = new Promise<void>((resolve, reject) =>
-      Promise.allSettled(promises).then(
-        () => resolve(),
-        () => reject()
-      )
-    );
-
-    this.dispatchEvent(newPendingStateEvent(mergedPromise));
+      if (this.dialog.open) {
+        this.dialog.addEventListener('closed', () => {
+          console.log('closed)');
+        });
+      }
+    }
   }
 
   protected renderInput(): TemplateResult {
