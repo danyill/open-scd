@@ -62,7 +62,7 @@ function updateNamespaces(destElement: Element, sourceElement: Element) {
   Array.prototype.slice
     .call(sourceElement.attributes)
     .filter(attr => attr.name.startsWith('xmlns:'))
-    .filter(attr => !destElement.hasAttribute(attr.name))
+    .filter(attr => !destElement?.hasAttribute(attr.name))
     .forEach(attr => {
       destElement.setAttributeNS(
         'http://www.w3.org/2000/xmlns/',
@@ -393,7 +393,7 @@ export default class ImportingIedPlugin extends LitElement {
       .updateComplete;
   }
 
-  private importIED(ied: Element): void {
+  private async importIED(ied: Element): Promise<void> {
     if (ied.getAttribute('name') === 'TEMPLATE') {
       const newIedName = uniqueTemplateIedName(this.doc, ied);
 
@@ -442,6 +442,23 @@ export default class ImportingIedPlugin extends LitElement {
         title: get('editing.import', { name: ied.getAttribute('name')! }),
         actions,
       })
+    );
+
+    // await the above action, then do the modification ?
+    // newLogEvent({
+    //   kind: 'action',
+    //   title: get('editing.created', { name }),
+    //   action,
+    // })
+
+    // This doesn't provide redo/undo capability as it is not using the Editing
+    // action API. To use it would require us to cache the full SCL file in
+    // OpenSCD as it is now which could use significant memory.
+    // TODO: In open-scd core update this to allow including in undo/redo.
+
+    updateNamespaces(
+      this.doc.documentElement,
+      ied.ownerDocument.documentElement
     );
   }
 
@@ -504,8 +521,10 @@ export default class ImportingIedPlugin extends LitElement {
 
     this.dialog.show();
 
+    // await closing of dialog
     await new Promise<void>(resolve => {
-      this.dialog.addEventListener('closed', () => {
+      this.dialog.addEventListener('closed', function onClosed(evt) {
+        evt.target?.removeEventListener('closed', onClosed);
         resolve();
       });
     });
@@ -523,12 +542,6 @@ export default class ImportingIedPlugin extends LitElement {
         'application/xml'
       );
       await this.prepareImport();
-
-      if (this.dialog.open) {
-        this.dialog.addEventListener('closed', () => {
-          console.log('closed)');
-        });
-      }
     }
   }
 
