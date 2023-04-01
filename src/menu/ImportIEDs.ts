@@ -19,6 +19,8 @@ import { ListItemBase } from '@material/mwc-list/mwc-list-item-base';
 import '../filtered-list.js';
 import {
   createElement,
+  EditorAction,
+  EditorActionEvent,
   identity,
   isPublic,
   newActionEvent,
@@ -64,7 +66,7 @@ function updateNamespaces(destElement: Element, sourceElement: Element) {
     .filter(attr => attr.name.startsWith('xmlns:'))
     .filter(attr => !destElement?.hasAttribute(attr.name))
     .forEach(attr => {
-      destElement.setAttributeNS(
+      destElement?.setAttributeNS(
         'http://www.w3.org/2000/xmlns/',
         attr.name,
         attr.value
@@ -384,7 +386,11 @@ export default class ImportingIedPlugin extends LitElement {
   @query('#importied-plugin-input') pluginFileUI!: HTMLInputElement;
   @query('mwc-dialog') dialog!: Dialog;
 
+  actionEvents: EditorActionEvent<EditorAction>[] = [];
+
   async run(): Promise<void> {
+    this.importDoc = undefined;
+    this.actionEvents = [];
     this.pluginFileUI.click();
   }
 
@@ -437,7 +443,7 @@ export default class ImportingIedPlugin extends LitElement {
       },
     });
 
-    this.dispatchEvent(
+    this.actionEvents.push(
       newActionEvent({
         title: get('editing.import', { name: ied.getAttribute('name')! }),
         actions,
@@ -450,16 +456,6 @@ export default class ImportingIedPlugin extends LitElement {
     //   title: get('editing.created', { name }),
     //   action,
     // })
-
-    // This doesn't provide redo/undo capability as it is not using the Editing
-    // action API. To use it would require us to cache the full SCL file in
-    // OpenSCD as it is now which could use significant memory.
-    // TODO: In open-scd core update this to allow including in undo/redo.
-
-    updateNamespaces(
-      this.doc.documentElement,
-      ied.ownerDocument.documentElement
-    );
   }
 
   private async importIEDs(): Promise<void> {
@@ -530,24 +526,38 @@ export default class ImportingIedPlugin extends LitElement {
     });
   }
 
+  protected async handleLoadFiles(event: Event): Promise<void> {
+    const promise = this.onLoadFiles(event);
+    this.dispatchEvent(newPendingStateEvent(promise));
+    return promise;
+  }
+
   /** Loads the file `event.target.files[0]` into [[`src`]] as a `blob:...`. */
   protected async onLoadFiles(event: Event): Promise<void> {
     const files = Array.from(
       (<HTMLInputElement | null>event.target)?.files ?? []
     );
 
-    for (const file of files) {
-      this.importDoc = new DOMParser().parseFromString(
-        await file.text(),
-        'application/xml'
-      );
+    const promises = files.map(
+      file =>
+        file
+          .text()
+          .then(text =>
+            new DOMParser().parseFromString(text, 'application/xml')
+          ),
+      files
+    );
+
+    for await (const file of promises) {
+      this.importDoc = file;
       await this.prepareImport();
     }
+    this.actionEvents.forEach(event => this.dispatchEvent(event));
   }
 
   protected renderInput(): TemplateResult {
     return html`<input multiple @change=${(event: Event) => {
-      this.onLoadFiles(event);
+      this.handleLoadFiles(event);
       (<HTMLInputElement>event.target).value = '';
     }} id="importied-plugin-input" accept=".sed,.scd,.ssd,.iid,.cid,.icd" type="file"></input>`;
   }
