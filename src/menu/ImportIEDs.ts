@@ -180,22 +180,25 @@ function hasConnectionToIed(type: Element, ied: Element): boolean {
 function addEnumType(
   ied: Element,
   enumType: Element,
-  parent: Element
+  parent: Element,
+  usedDataTypes: Array<string>
 ): SimpleAction | undefined {
   if (!hasConnectionToIed(enumType, ied)) return;
 
-  const existEnumType = parent.querySelector(
-    `EnumType[id="${enumType.getAttribute('id')}"]`
-  );
+  const id = enumType.getAttribute('id') ?? 'Unknown Type';
+  usedDataTypes.push(id);
+
+  const existEnumType = parent.querySelector(`EnumType[id="${id}"]`);
   if (existEnumType && enumType.isEqualNode(existEnumType)) return;
 
-  if (existEnumType) {
+  if (existEnumType || usedDataTypes.includes(id)) {
     // There is an `id` conflict in the project that must be resolved by
     // concatenating the IED name with the id
     const data: Element = enumType.parentElement!;
     const idOld = enumType.getAttribute('id');
     const idNew = ied.getAttribute('name')! + idOld;
     enumType.setAttribute('id', idNew);
+    usedDataTypes.push(idNew);
 
     data
       .querySelectorAll(
@@ -215,22 +218,25 @@ function addEnumType(
 function addDAType(
   ied: Element,
   daType: Element,
-  parent: Element
+  parent: Element,
+  usedDataTypes: Array<string>
 ): SimpleAction | undefined {
   if (!hasConnectionToIed(daType, ied)) return;
 
-  const existDAType = parent.querySelector(
-    `DAType[id="${daType.getAttribute('id')}"]`
-  );
+  const id = daType.getAttribute('id') ?? 'Unknown Type';
+  usedDataTypes.push(id);
+
+  const existDAType = parent.querySelector(`DAType[id="${id}"]`);
   if (existDAType && daType.isEqualNode(existDAType)) return;
 
-  if (existDAType) {
+  if (existDAType || usedDataTypes.includes(id)) {
     // There is an `id` conflict in the project that must be resolved by
     // concatenating the IED name with the id
     const data: Element | null = daType.parentElement!;
     const idOld = daType.getAttribute('id');
     const idNew = ied.getAttribute('name')! + idOld;
     daType.setAttribute('id', idNew);
+    usedDataTypes.push(idNew);
 
     data
       .querySelectorAll(
@@ -250,22 +256,25 @@ function addDAType(
 function addDOType(
   ied: Element,
   doType: Element,
-  parent: Element
+  parent: Element,
+  usedDataTypes: Array<string>
 ): SimpleAction | undefined {
   if (!hasConnectionToIed(doType, ied)) return;
 
-  const existDOType = parent.querySelector(
-    `DOType[id="${doType.getAttribute('id')}"]`
-  );
+  const id = doType.getAttribute('id') ?? 'Unknown Type';
+  usedDataTypes.push(id);
+
+  const existDOType = parent.querySelector(`DOType[id="${id}"]`);
   if (existDOType && doType.isEqualNode(existDOType)) return;
 
-  if (existDOType) {
+  if (existDOType || usedDataTypes.includes(id)) {
     // There is an `id` conflict in the project that must be resolved by
     // concatenating the IED name with the id
     const data: Element = doType.parentElement!;
     const idOld = doType.getAttribute('id');
     const idNew = ied.getAttribute('name')! + idOld;
     doType.setAttribute('id', idNew);
+    usedDataTypes.push(idNew);
 
     data
       .querySelectorAll(
@@ -285,21 +294,24 @@ function addDOType(
 function addLNodeType(
   ied: Element,
   lNodeType: Element,
-  parent: Element
+  parent: Element,
+  usedDataTypes: Array<string>
 ): SimpleAction | undefined {
   if (!hasConnectionToIed(lNodeType, ied)) return;
 
-  const existLNodeType = parent.querySelector(
-    `LNodeType[id="${lNodeType.getAttribute('id')}"]`
-  );
+  const id = lNodeType.getAttribute('id') ?? 'Unknown Type';
+  usedDataTypes.push(id);
+
+  const existLNodeType = parent.querySelector(`LNodeType[id="${id}"]`);
   if (existLNodeType && lNodeType.isEqualNode(existLNodeType)) return;
 
-  if (existLNodeType) {
+  if (existLNodeType || usedDataTypes.includes(id)) {
     // There is an `id` conflict in the project that must be resolved by
     // concatenating the IED name with the id
     const idOld = lNodeType.getAttribute('id')!;
     const idNew = ied.getAttribute('name')!.concat(idOld);
     lNodeType.setAttribute('id', idNew);
+    usedDataTypes.push(idNew);
 
     Array.from(
       ied.querySelectorAll(`LN0[lnType="${idOld}"],LN[lnType="${idOld}"]`)
@@ -316,7 +328,11 @@ function addLNodeType(
   };
 }
 
-function addDataTypeTemplates(ied: Element, doc: XMLDocument): SimpleAction[] {
+function addDataTypeTemplates(
+  ied: Element,
+  doc: XMLDocument,
+  usedDataTypes: Array<string>
+): SimpleAction[] {
   const actions: (SimpleAction | undefined)[] = [];
 
   const dataTypeTemplates = doc.querySelector(':root > DataTypeTemplates')
@@ -335,25 +351,29 @@ function addDataTypeTemplates(ied: Element, doc: XMLDocument): SimpleAction[] {
   ied.ownerDocument
     .querySelectorAll(':root > DataTypeTemplates > LNodeType')
     .forEach(lNodeType =>
-      actions.push(addLNodeType(ied, lNodeType, dataTypeTemplates!))
+      actions.push(
+        addLNodeType(ied, lNodeType, dataTypeTemplates!, usedDataTypes)
+      )
     );
 
   ied.ownerDocument
     .querySelectorAll(':root > DataTypeTemplates > DOType')
     .forEach(doType =>
-      actions.push(addDOType(ied, doType, dataTypeTemplates!))
+      actions.push(addDOType(ied, doType, dataTypeTemplates!, usedDataTypes))
     );
 
   ied.ownerDocument
     .querySelectorAll(':root > DataTypeTemplates > DAType')
     .forEach(daType =>
-      actions.push(addDAType(ied, daType, dataTypeTemplates!))
+      actions.push(addDAType(ied, daType, dataTypeTemplates!, usedDataTypes))
     );
 
   ied.ownerDocument
     .querySelectorAll(':root > DataTypeTemplates > EnumType')
     .forEach(enumType =>
-      actions.push(addEnumType(ied, enumType, dataTypeTemplates!))
+      actions.push(
+        addEnumType(ied, enumType, dataTypeTemplates!, usedDataTypes)
+      )
     );
 
   return <SimpleAction[]>actions.filter(item => item !== undefined);
@@ -383,10 +403,11 @@ export default class ImportingIedPlugin extends LitElement {
   @state()
   importDoc?: XMLDocument;
 
+  actionEvents: EditorActionEvent<EditorAction>[] = [];
+  usedDataTypes: Array<string> = [];
+
   @query('#importied-plugin-input') pluginFileUI!: HTMLInputElement;
   @query('mwc-dialog') dialog!: Dialog;
-
-  actionEvents: EditorActionEvent<EditorAction>[] = [];
 
   async run(): Promise<void> {
     this.importDoc = undefined;
@@ -433,7 +454,11 @@ export default class ImportingIedPlugin extends LitElement {
       ied.ownerDocument.documentElement
     );
 
-    const dataTypeTemplateActions = addDataTypeTemplates(ied, this.doc);
+    const dataTypeTemplateActions = addDataTypeTemplates(
+      ied,
+      this.doc,
+      this.usedDataTypes
+    );
     const communicationActions = addCommunicationElements(ied, this.doc);
     const actions = communicationActions.concat(dataTypeTemplateActions);
     actions.push({
@@ -449,13 +474,6 @@ export default class ImportingIedPlugin extends LitElement {
         actions,
       })
     );
-
-    // await the above action, then do the modification ?
-    // newLogEvent({
-    //   kind: 'action',
-    //   title: get('editing.created', { name }),
-    //   action,
-    // })
   }
 
   private async importIEDs(): Promise<void> {
@@ -527,6 +545,7 @@ export default class ImportingIedPlugin extends LitElement {
   }
 
   protected async handleLoadFiles(event: Event): Promise<void> {
+    // wrapper to allow pending state event to be shown
     const promise = this.onLoadFiles(event);
     this.dispatchEvent(newPendingStateEvent(promise));
     return promise;
