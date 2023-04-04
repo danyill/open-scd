@@ -41,6 +41,7 @@
     "lit-html": "1.4.1",
     "lit-translate": "^1.2.1",
     "marked": "^4.0.10",
+    "object-inspect": "^1.12.3",
     "panzoom": "^9.4.2"
   },
   "scripts": {
@@ -77,6 +78,7 @@
     "@snowpack/plugin-typescript": "^1.2.1",
     "@types/marked": "^2.0.4",
     "@types/node": "^16.6.1",
+    "@types/object-inspect": "^1.8.1",
     "@typescript-eslint/eslint-plugin": "^4.29.2",
     "@typescript-eslint/parser": "^4.29.2",
     "@web/dev-server-esbuild": "^0.2.16",

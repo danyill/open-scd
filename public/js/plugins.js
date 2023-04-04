@@ -233,5 +233,14 @@ export const officialPlugins = [
     kind: 'menu',
     requireDoc: true,
     position: 'middle'
-  }
+  },
+  {
+    name: 'Interactive Console',
+    src: '/src/menu/InteractiveConsole.js',
+    icon: 'download',
+    default: true,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'middle',
+  },
 ];
