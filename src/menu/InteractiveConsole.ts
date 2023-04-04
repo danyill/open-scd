@@ -174,3 +174,12 @@ export default class InteractiveConsole extends LitElement {
 // const ieds = Array.from(doc.querySelectorAll('IED'))
 
 // ieds.forEach(ied => console.log(ied.getAttribute('name')))
+
+
+// TODO:
+// Make editor plugin
+// Move to OpenSCD core
+// Put input and output left and right
+// Ctrl+S to format/beautify
+// Look at the property inspector case problem.
+// https://www.bayanbennett.com/posts/how-does-mdn-intercept-console-log-devlog-003/
