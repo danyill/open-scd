@@ -233,5 +233,14 @@ export const officialPlugins = [
     kind: 'menu',
     requireDoc: true,
     position: 'middle'
-  }
+  },
+  {
+    name: 'Export Report Details',
+    src: '/src/menu/ExportReportDetails.js',
+    icon: 'download',
+    default: true,
+    kind: 'menu',
+    requireDoc: true,
+    position: 'middle',
+  },
 ];
