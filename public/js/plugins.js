@@ -90,11 +90,19 @@ export const officialPlugins = [
     default: false,
     kind: 'editor',
   },
+  
   {
     name: 'Cleanup',
     src: '/src/editors/Cleanup.js',
     icon: 'cleaning_services',
     default: false,
+    kind: 'editor',
+  },
+  {
+    name: 'Interactive Console',
+    src: '/src/editors/InteractiveConsole.js',
+    icon: 'terminal',
+    default: true,
     kind: 'editor',
   },
   {
@@ -233,14 +241,5 @@ export const officialPlugins = [
     kind: 'menu',
     requireDoc: true,
     position: 'middle'
-  },
-  {
-    name: 'Interactive Console',
-    src: '/src/menu/InteractiveConsole.js',
-    icon: 'download',
-    default: true,
-    kind: 'menu',
-    requireDoc: true,
-    position: 'middle',
   },
 ];
