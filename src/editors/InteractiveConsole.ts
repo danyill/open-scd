@@ -217,3 +217,4 @@ export default class InteractiveConsole extends LitElement {
 // send off events
 
 // https://github.com/ajaxorg/ace/issues/4060
+// Uncaught DOMException: Failed to execute 'importScripts' on 'WorkerGlobalScope': The script at 'http://localhost:8080/public/ace/worker-javascript.js' failed to load. snowpack
